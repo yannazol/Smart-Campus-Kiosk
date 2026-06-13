@@ -117,8 +117,8 @@ const BLDG_LABELS = {
   'Building 4': { short: 'B4', color: '#a78bfa' },
 }
 
-// Types that should never show as clickable nodes
-const HIDDEN_NODE_TYPES = new Set(['hallway'])
+// Types that should never show as clickable nodes — kept for reference
+// const HIDDEN_NODE_TYPES = new Set(['hallway'])
 
 function roomLabel(label, bw, bh) {
   if (!label || typeof label !== 'string' || label.trim() === '') return { lines: [], fontSize: 6, lineH: 8 }
@@ -150,15 +150,6 @@ function CampusMap({ floor, destId, path }) {
     }
     return s
   }, [path])
-
-  // Only show kiosk + destination + path nodes (no hallways, no random clicks)
-  const visibleNodes = floorLocs.filter(l =>
-    !HIDDEN_NODE_TYPES.has(l.type) && (
-      l.id === KIOSK_NODE_ID ||
-      l.id === destId ||
-      path.includes(l.id)
-    )
-  )
 
   return (
     <svg
@@ -290,57 +281,70 @@ function CampusMap({ floor, destId, path }) {
         )
       })()}
 
-      {/* ── PASS 4: Window & sub-location pill tags — ALWAYS VISIBLE ── */}
+      {/* ── PASS 4: Pill labels — room codes, windows, entrance, exit only ── */}
       {floorLocs.filter(l =>
         l.type !== 'hallway' &&
-        l.id !== KIOSK_NODE_ID &&
-        (l.name?.toLowerCase().startsWith('window') ||
-         l.type === 'Registrar' ||
-         l.type === 'Accounting')
+        l.id !== KIOSK_NODE_ID
       ).map(loc => {
         const isDest  = loc.id === destId
         const lx = sx(loc.x)
         const ly = sy(loc.y)
+        const meta = TYPE_META[loc.type] || { color: '#6eb6ff' }
+        const n = (loc.name || '').toLowerCase()
 
-        // Short label — "W1", "W2" etc
-        const shortLabel = loc.name.toLowerCase().startsWith('window')
+        // Only show pill for: windows, room codes (B2.11 etc), entrance, exit
+        const isWindow   = n.startsWith('window')
+        const isRoomCode = /^b\d+\.\d+$/i.test(loc.name.trim())
+        const isEntrance = n.includes('entrance')
+        const isExit     = n.includes('exit')
+
+        if (!isWindow && !isRoomCode && !isEntrance && !isExit) return null
+
+        // Short label
+        const label = isWindow
           ? 'W' + loc.name.replace(/[^0-9]/g, '')
-          : loc.name.slice(0, 4)
+          : isEntrance ? 'Entrance'
+          : isExit     ? 'Exit'
+          : loc.name.trim()  // room code as-is e.g. B2.11
 
-        const pillW = 18
-        const pillH = 10
+        const pillW = Math.max(18, label.length * 5.2 + 8)
+        const pillH = 12
+
+        const pillFill   = isDest ? '#378add' : '#111e35'
+        const pillStroke = isDest ? '#6eb6ff' : meta.color + '88'
+        const textCol    = isDest ? '#ffffff'  : meta.color
 
         return (
           <g key={`pill-${loc.id}`} style={{ pointerEvents: 'none' }}>
-            {/* Pill background */}
             <rect
               x={lx - pillW / 2} y={ly - pillH / 2}
               width={pillW} height={pillH}
               rx="3"
-              fill={isDest ? '#378add' : '#162d55'}
-              stroke={isDest ? '#6eb6ff' : '#2a4a7f'}
+              fill={pillFill}
+              stroke={pillStroke}
               strokeWidth="0.8"
-              opacity="0.92"
+              opacity="0.95"
             />
-            {/* Pill label */}
             <text
               x={lx} y={ly}
               textAnchor="middle" dominantBaseline="middle"
               style={{
                 fontSize: 5.5,
-                fill: isDest ? '#fff' : '#6eb6ff',
+                fill: textCol,
                 fontFamily: 'monospace',
-                fontWeight: 700,
+                fontWeight: isDest ? 700 : 400,
               }}
             >
-              {shortLabel}
+              {label}
             </text>
           </g>
         )
       })}
 
-      {/* ── Nodes: kiosk + destination + path only, NO hallways, NO tapping ── */}
-      {visibleNodes.map(loc => {
+      {/* ── PASS 5: Kiosk + destination nodes only ── */}
+      {floorLocs.filter(l =>
+        l.id === KIOSK_NODE_ID || l.id === destId
+      ).map(loc => {
         const isKiosk = loc.id === KIOSK_NODE_ID
         const isDest  = loc.id === destId
         const meta    = TYPE_META[loc.type] || { color: '#94a3b8' }
@@ -523,7 +527,10 @@ export default function MapPage() {
             <div style={s.sec}>
               <p style={s.secLabel}>📱 Scan to save on phone</p>
               <div style={s.qrRow}>
-                <QRCode value={`ICCT-${dest.id}-${dest.name}`} size={72}/>
+                <QRCode
+                  value={`${window.location.origin}/directions?to=${dest.id}&name=${encodeURIComponent(dest.name)}&floor=${dest.floor || 1}&building=${dest.building || ''}`}
+                  size={72}
+                />
                 <p style={s.muted}>Scan to save these directions on your phone.</p>
               </div>
             </div>
