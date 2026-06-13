@@ -319,8 +319,7 @@ export default function Home() {
 
 
 
-      {/* ── Chatbot FAB ── */}
-      <button onClick={() => navigate('/chatbot')} style={styles.chatbot}>💬</button>
+      
 
     </div>
   )
@@ -569,18 +568,5 @@ const styles = {
     color: '#4a7fb5',
     cursor: 'not-allowed',
   },
-  chatbot: {
-    position: 'fixed',
-    bottom: '1.5rem',
-    right: '1.5rem',
-    background: '#378add',
-    border: 'none',
-    borderRadius: '50%',
-    width: '68px',
-    height: '68px',
-    fontSize: '28px',
-    cursor: 'pointer',
-    zIndex: 999,
-    boxShadow: '0 4px 20px rgba(55,138,221,0.5)',
-  },
+  
 }
