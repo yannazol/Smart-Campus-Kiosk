@@ -108,7 +108,7 @@ const QUICK_REPLIES = [
   { label: '🏫 Admission',         msg: 'Where is the Admission Office?' },
 ]
 
-// Fix 4: keyboard rows with period and dash
+// Keyboard rows with period and dash
 const KEYBOARD_ROWS = [
   ['Q','W','E','R','T','Y','U','I','O','P'],
   ['A','S','D','F','G','H','J','K','L'],
@@ -161,27 +161,6 @@ export default function ChatBot() {
     sessionStorage.setItem('chatbot_messages', JSON.stringify(messages))
   }, [messages])
 
-  // clear chat after 1 minute of no interaction
-  const resetIdleTimer = () => {
-    clearTimeout(idleTimer.current)
-    idleTimer.current = setTimeout(() => {
-      setMessages(INITIAL_MSG.map(m => ({ ...m, time: new Date() })))
-      sessionStorage.removeItem('chatbot_messages')
-      setOpen(false)
-      setInput('')
-      setShowKeyboard(false)
-    }, 60000) // 1 minute---
-  }
-
-  useEffect(() => {
-    const events = ['mousedown', 'touchstart', 'keydown']
-    events.forEach(e => window.addEventListener(e, resetIdleTimer))
-    resetIdleTimer()
-    return () => {
-      events.forEach(e => window.removeEventListener(e, resetIdleTimer))
-      clearTimeout(idleTimer.current)
-    }
-  }, [])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -203,7 +182,7 @@ export default function ChatBot() {
     setInput('')
     setTyping(true)
     setShowKeyboard(false)
-    resetIdleTimer()
+    
 
     setTimeout(() => {
       const match = getResponse(text)
@@ -321,7 +300,7 @@ export default function ChatBot() {
             <div style={{ ...s.inputDisplay, ...(showKeyboard ? s.inputDisplayActive : {}) }}
               onClick={() => setShowKeyboard(true)}>
               <span style={{ color: input ? 'white' : '#4a7fb5', fontSize: '15px', flex: 1 }}>
-                {input || 'Tap to type a message...'}
+                {showKeyboard ? input : (input || 'Tap to type a message...')}
                 {showKeyboard && <span style={s.cursor}>|</span>}
               </span>
               {input.length > 0 && (
@@ -400,10 +379,10 @@ const s = {
   // floats above FAB with gap -----------------------
   panel: {
     position:'fixed',
-    bottom:'10rem',           // --- gap above FAB so no overlap
+    bottom:'10rem',           
     right:'11rem',
     width:'600px',
-    height:'800px',          // --- fixed height always
+    height:'800px',          
     background:'#0f2040',
     border:'1px solid #1e3a5f',
     borderRadius:'20px',
@@ -417,7 +396,7 @@ const s = {
 
   header: {
     display:'flex', alignItems:'center',
-    padding:'14px 18px',           // --- proper padding
+    padding:'14px 18px',           
     background:'#0a1628',
     borderBottom:'1px solid #1e3a5f',
     flexShrink:0,
@@ -480,7 +459,7 @@ const s = {
     animation:'dotBounce 1s infinite',
   },
 
-  // Fix 3: quick replies always visible
+  // quick replies always visible
   quickReplies: {
     display:'flex', flexWrap:'wrap', gap:'6px',
     padding:'20px 14px',
