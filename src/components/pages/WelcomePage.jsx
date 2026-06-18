@@ -170,16 +170,13 @@ export default function WelcomePage() {
 
         {/* Touch hint with ShinyText */}
         <div style={{
-          display:'inline-flex', alignItems:'center', gap:'10px',
-          marginTop:'0.5rem', padding:'12px 28px',
-          border:'1px solid #1e3a5f', borderRadius:'50px',
-          animation:'fadeIn 1s ease 1.2s both, scalePulse 2.5s ease-in-out 2s infinite',
-        }}>
-          <span style={{ fontSize:'18px' }}>👆</span>
-          <ShinyText
+          marginTop:'0.5rem',
+              animation:'fadeIn 1s ease 1.2s both, scalePulse 2.5s ease-in-out 2s infinite',
+          }}>
+            <ShinyText
             text="TOUCH ANYWHERE TO CONTINUE"
-            color="#4a7fb5"
-            shineColor="#6eb6ff"
+            color="#839cb5"
+            shineColor="#153f72"
             speed={4}
             delay={2}
             spread={40}
