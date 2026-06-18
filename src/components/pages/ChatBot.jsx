@@ -109,13 +109,14 @@ const QUICK_REPLIES = [
   { label: '🏫 Admission',         msg: 'Where is the Admission Office?' },
 ]
 
-// Keyboard rows with period and dash
 const KEYBOARD_ROWS = [
   ['1','2','3','4','5','6','7','8','9','0'],
   ['Q','W','E','R','T','Y','U','I','O','P'],
   ['A','S','D','F','G','H','J','K','L'],
   ['Z','X','C','V','B','N','M','⌫'],
 ]
+
+const STRANDS_COLORS = ["#6f570d","#091dae","#5a0822"]
 
 const INITIAL_MSG = [{ from: 'bot', text: "Hi! 👋 I'm your Campus Navigator Bot. How can I help you today?", time: new Date().toISOString() }]
 
@@ -134,13 +135,36 @@ function formatText(text) {
   )
 }
 
+// Reusable glass orb avatar
+function BotOrb({ size = 56, live = true }) {
+  if (!live) {
+    return (
+      <div style={{
+        width: size, height: size, borderRadius: '50%', flexShrink: 0,
+        background: 'conic-gradient(from 180deg, #6f570d, #091dae, #5a0822, #6f570d)',
+        boxShadow: 'inset 0 0 8px rgba(0,0,0,0.4)',
+      }}/>
+    )
+  }
+  return (
+    <div style={{ width: size, height: size, borderRadius: '50%', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
+      <Strands
+        colors={STRANDS_COLORS}
+        count={3} speed={0.6} amplitude={1.5} waviness={1}
+        thickness={0.8} glow={2.5} taper={2} spread={0.7}
+        intensity={0.6} saturation={2} opacity={1} scale={1.2}
+        glass refraction={1.0} dispersion={1.0} glassSize={0.5} hueShift={0.08}
+      />
+    </div>
+  )
+}
+
 // ─────────────────────────────────────────────────────────────
 //  CHATBOT COMPONENT
 // ─────────────────────────────────────────────────────────────
 export default function ChatBot() {
   const navigate = useNavigate()
 
-  // sessionStorage remember messages across open/close and page refresh-------------------------------
   const [messages, setMessages] = useState(() => {
     try {
       const saved = sessionStorage.getItem('chatbot_messages')
@@ -156,13 +180,10 @@ export default function ChatBot() {
   const [showKeyboard,setShowKeyboard]= useState(false)
   const messagesEndRef = useRef(null)
   const overlayRef     = useRef(null)
-  const idleTimer      = useRef(null)
 
-  // Save messages to sessionStorage kapag nagbago, para hindi mawala on refresh o close-open ng panel
   useEffect(() => {
     sessionStorage.setItem('chatbot_messages', JSON.stringify(messages))
   }, [messages])
-
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -184,7 +205,6 @@ export default function ChatBot() {
     setInput('')
     setTyping(true)
     setShowKeyboard(false)
-    
 
     setTimeout(() => {
       const match = getResponse(text)
@@ -223,12 +243,12 @@ export default function ChatBot() {
           to   { opacity:1; transform:translateY(0) scale(1); }
         }
         @keyframes fabPulse {
-          0%,100% { box-shadow:0 4px 20px rgba(55,138,221,0.5); }
-          50%     { box-shadow:0 4px 32px rgba(55,138,221,0.9); }
+          0%,100% { box-shadow:0 0 8px rgba(55,138,221,0.5); }
+          50%     { box-shadow:0 0 14px rgba(55,138,221,0.9); }
         }
         @keyframes fabPulseOpen {
-          0%,100% { box-shadow:0 4px 20px rgba(55,138,221,0.8); }
-          50%     { box-shadow:0 4px 36px rgba(55,138,221,1); }
+          0%,100% { box-shadow:0 0 20px rgba(55,138,221,0.8); }
+          50%     { box-shadow:0 0 36px rgba(55,138,221,1); }
         }
         @keyframes blink {
           0%,100% { opacity:1; }
@@ -246,27 +266,21 @@ export default function ChatBot() {
       {open && (
         <div style={s.panel}>
 
-          {/* header ----------------------------- */}
+          {/* header — clean, no avatar ----------------------------- */}
           <div style={s.header}>
-          <p style={s.botName}>Campus Botbot</p>
-          <p style={s.botStatus}>● Online · Smart Navigator</p>
+            <p style={s.botName}>Campus AI</p>
+            <p style={s.botStatus}>● Online · Smart Navigator</p>
           </div>
 
           {/* Messages ----------------------------- */}
           <div className="chatbot-messages" style={s.messages}>
             {messages.map((msg, i) => (
               <div key={i} style={{ ...s.msgRow, justifyContent: msg.from === 'user' ? 'flex-end' : 'flex-start' }}>
-                {msg.from === 'bot' && (
-                  <div style={s.botAvatarSmall}>
-                    <Strands
-                      colors={["#6f570d","#091dae","#5a0822"]}
-                      count={3} speed={0.6} amplitude={1.5} waviness={1}
-                      thickness={0.8} glow={2.5} taper={2} spread={0.7}
-                      intensity={0.6} saturation={2} opacity={1} scale={1.2}
-                      glass refraction={1.0} dispersion={1.0} glassSize={0.5} hueShift={0.08}
-                    />
-                  </div>
-                )}
+                {msg.from === 'bot' && (() => {
+                    const botIndices = messages.map((m,idx) => m.from==='bot' ? idx : null).filter(v=>v!==null)
+                    const recentBotIndices = botIndices.slice(-3)
+                     return recentBotIndices.includes(i) ? <BotOrb size={56}/> : <div style={{width:56,flexShrink:0}}/>
+                        })()}
                 <div style={{ ...s.bubble, ...(msg.from === 'user' ? s.bubbleUser : s.bubbleBot) }}>
                   <p style={s.bubbleText}>{formatText(msg.text)}</p>
                   {msg.windows && <p style={s.windowHint}>🪟 {msg.windows}</p>}
@@ -281,15 +295,7 @@ export default function ChatBot() {
             ))}
             {typing && (
               <div style={{ ...s.msgRow, justifyContent: 'flex-start' }}>
-                <div style={s.botAvatarSmall}>
-                    <Strands
-                      colors={["#6f570d","#091dae","#5a0822"]}
-                      count={3} speed={0.6} amplitude={1.5} waviness={1}
-                      thickness={0.8} glow={2.5} taper={2} spread={0.7}
-                      intensity={0.6} saturation={2} opacity={1} scale={1.2}
-                      glass refraction={1.0} dispersion={1.0} glassSize={0.5} hueShift={0.08}
-                    />
-                  </div>
+                <BotOrb size={56}/>
                 <div style={{ ...s.bubble, ...s.bubbleBot }}>
                   <div style={s.typingDots}>
                     {[0,150,300].map((d,i) => <span key={i} style={{ ...s.dot, animationDelay:`${d}ms` }}/>)}
@@ -300,7 +306,7 @@ export default function ChatBot() {
             <div ref={messagesEndRef}/>
           </div>
 
-          {/*  Quick replies ALWAYS visible */}
+          {/* Quick replies ALWAYS visible */}
           <div style={s.quickReplies}>
             {QUICK_REPLIES.map((qr, i) => (
               <button key={i} style={s.quickBtn}
@@ -330,10 +336,9 @@ export default function ChatBot() {
             </button>
           </div>
 
-          {/* Keyboard inside panel — no resize */}
+          {/* Keyboard inside panel */}
           {showKeyboard && (
             <div style={s.keyboard}>
-              {/*  bigger keys + period + dash in last row */}
               {KEYBOARD_ROWS.map((row, i) => (
                 <div key={i} style={s.keyRow}>
                   {row.map(key => (
@@ -360,12 +365,24 @@ export default function ChatBot() {
         </div>
       )}
 
-      {/* Floating bubble */}
+      {/* Floating bubble — Strands orb */}
       <button
         style={{ ...s.fab, animation: open ? 'fabPulseOpen 2s infinite' : 'fabPulse 3s infinite' }}
-        onClick={() => { setOpen(p => !p); setShowKeyboard(false) }}>
-        💬
-        {!open && messages.length > 1 && <div style={s.fabBadge}/>}
+        onClick={() => {
+            requestAnimationFrame(() => {
+              setOpen(p => !p)
+                   setShowKeyboard(false)
+          })
+        }}>
+        <div style={{ width:'100%', height:'100%', borderRadius:'50%', overflow:'hidden', position:'absolute', inset:0 }}>
+          <Strands
+            colors={STRANDS_COLORS}
+            count={4} speed={0.6} amplitude={1.5} waviness={1.5}
+            thickness={0.8} glow={2} taper={2.4} spread={1.2}
+            intensity={0.7} saturation={2} opacity={1} scale={1.6}
+            glass refraction={1.5} dispersion={1.2} glassSize={1.2} hueShift={0.1}
+          />
+        </div>
       </button>
     </>
   )
@@ -377,12 +394,15 @@ const s = {
 
   fab: {
     position:'fixed', bottom:'6rem', right:'6rem',
-    background:'linear-gradient(135deg, #378add, #1d6fb5)',
+    background:'transparent',
     border:'none', borderRadius:'50%',
-    width:'80px', height:'72px', fontSize:'30px',
+    width:'100px', height:'100px',
     cursor:'pointer', zIndex:1000,
     transition:'transform 0.2s',
     display:'flex', alignItems:'center', justifyContent:'center',
+    overflow:'hidden', padding:0,
+    outline:'none',
+    WebkitTapHighlightColor:'transparent',
   },
   fabBadge: {
     position:'absolute', top:'5px', right:'10px',
@@ -391,13 +411,12 @@ const s = {
     border:'2px solid #0a1628',
   },
 
-  // floats above FAB with gap -----------------------
   panel: {
     position:'fixed',
-    bottom:'10rem',           
+    bottom:'10rem',
     right:'11rem',
     width:'600px',
-    height:'800px',          
+    height:'800px',
     background:'#0f2040',
     border:'1px solid #1e3a5f',
     borderRadius:'20px',
@@ -410,20 +429,11 @@ const s = {
   },
 
   header: {
-  display:'flex', flexDirection:'column', gap:'3px',
-  padding:'14px 18px',
-  background:'#0a1628',
-  borderBottom:'1px solid #1e3a5f',
-  flexShrink:0,
-},
-
-  headerLeft: { display:'flex', alignItems:'center', gap:'12px' },
-  botAvatar: {
-    width:'40px', height:'40px',
-    background:'linear-gradient(135deg, #378add, #1d6fb5)',
-    borderRadius:'50%',
-    display:'flex', alignItems:'center', justifyContent:'center',
-    fontSize:'20px', flexShrink:0,
+    display:'flex', flexDirection:'column', gap:'3px',
+    padding:'14px 18px',
+    background:'#0a1628',
+    borderBottom:'1px solid #1e3a5f',
+    flexShrink:0,
   },
 
   botName:   { fontSize:'16px', fontWeight:'700', color:'white', margin:0 },
@@ -435,19 +445,11 @@ const s = {
     display:'flex', flexDirection:'column', gap:'25px',
   },
 
-  msgRow: { display:'flex', alignItems:'flex-end', gap:'8px' },
-  botAvatarSmall: {
-  width:'56px', height:'56px',
-  borderRadius:'50%',
-  overflow:'hidden',
-  position:'relative',
-  flexShrink:0,
-},
+  msgRow: { display:'flex', alignItems:'center', gap:'8px' },
 
   bubble: { maxWidth:'78%', padding:'12px 14px', borderRadius:'16px', wordBreak:'break-word' },
   bubbleBot:  { background:'#162d55', border:'1px solid #1e3a5f', borderBottomLeftRadius:'4px' },
   bubbleUser: { background:'linear-gradient(135deg, #378add, #1d6fb5)', borderBottomRightRadius:'4px' },
-  // font---------------
   bubbleText: { fontSize:'15px', color:'white', margin:0, lineHeight:1.6 },
   bubbleTime: { fontSize:'11px', color:'#4a7fb5', margin:'5px 0 0', textAlign:'right' },
   windowHint: {
@@ -474,13 +476,11 @@ const s = {
     animation:'dotBounce 1s infinite',
   },
 
-  // quick replies always visible
   quickReplies: {
     display:'flex', flexWrap:'wrap', gap:'6px',
     padding:'20px 14px',
     borderTop:'1px solid #1e3a5f',
     flexShrink:0,
-    
   },
 
   quickBtn: {
@@ -545,7 +545,7 @@ const s = {
     maxWidth:'42px', cursor:'pointer',
     fontFamily:'inherit',
   },
-  
+
   keyBackspace: { maxWidth:'48px', background:'#1a1a2e', color:'#ef4444' },
   keySymbol:    { maxWidth:'52px', background:'#0c2d48', color:'#6eb6ff', fontSize:'18px' },
   keyCaps:      { maxWidth:'50px', color:'#4a7fb5' },

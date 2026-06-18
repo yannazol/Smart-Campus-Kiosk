@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
-const IDLE_TIME    = 10 *45 * 1000  // 45 seconds-----------------------------------------
+const IDLE_TIME    = 10* 45 * 1000  // 45 seconds-----------------------------------------
 const WARNING_TIME = 10              // 10 second countdown-------------------------------
 
 export default function IdleTimeout() {
