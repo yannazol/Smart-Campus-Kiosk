@@ -56,7 +56,7 @@ function LoginPage({ onLogin }) {
           <label style={s.fieldLabel}>PASSWORD</label>
           <div style={s.pwWrap}>
             <input
-              style={{ ...s.realInput, flex: 1 }}
+              style={{ ...s.realInput, paddingRight: '44px' }}
               type={showPw ? 'text' : 'password'}
               placeholder="Enter password"
               value={password}
@@ -185,18 +185,18 @@ function ManageLocations({ locations, setLocations }) {
       </div>
 
       {/* Search */}
-      <input style={{ ...s.inp, marginBottom: 10, width: '100%' }}
-        placeholder="Search locations..."
+      <input style={{ ...s.inp, marginBottom: 10, width: '100%', fontSize: 'calc(12px + 0.25vw)' }}
+        placeholder="🔍 Search locations..."
         value={search}
         onChange={e => setSearch(e.target.value)}/>
 
-      {/* Table */}
-      <div style={{ overflowX: 'auto' }}>
-        <table style={s.tbl}>
-          <thead>
+      {/* Table — Fix: proper scroll + bigger font */}
+      <div style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 420px)', borderRadius: 10, border: '1px solid #1e3a5f' }}>
+        <table style={{ ...s.tbl, fontSize: 'calc(12px + 0.25vw)' }}>
+          <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
             <tr>
-              {['ID','Name','Type','Floor','Building','X','Y','Actions'].map(h => (
-                <th key={h} style={s.th}>{h}</th>
+              {['ID','Name','Type','Floor','Building','Actions'].map(h => (
+                <th key={h} style={{ ...s.th, fontSize: 'calc(10px + 0.2vw)', padding: 'calc(10px + 0.2vw)' }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -210,10 +210,8 @@ function ManageLocations({ locations, setLocations }) {
                     {Object.keys(TYPE_META).map(t => <option key={t}>{t}</option>)}
                   </select>
                 </td>
-                <td style={s.td}><input style={{ ...s.inpSm, width: 50 }} type="number" value={editLoc.floor} onChange={e => setEditLoc(f => ({ ...f, floor: e.target.value }))}/></td>
+                <td style={s.td}><input style={{ ...s.inpSm, width: 60 }} type="number" value={editLoc.floor} onChange={e => setEditLoc(f => ({ ...f, floor: e.target.value }))}/></td>
                 <td style={s.td}><input style={s.inpSm} value={editLoc.building || ''} onChange={e => setEditLoc(f => ({ ...f, building: e.target.value }))}/></td>
-                <td style={s.td}><input style={{ ...s.inpSm, width: 50 }} type="number" value={editLoc.x} onChange={e => setEditLoc(f => ({ ...f, x: e.target.value }))}/></td>
-                <td style={s.td}><input style={{ ...s.inpSm, width: 50 }} type="number" value={editLoc.y} onChange={e => setEditLoc(f => ({ ...f, y: e.target.value }))}/></td>
                 <td style={s.td}>
                   <button style={s.sBtnOk} onClick={saveLoc}>✓</button>{' '}
                   <button style={s.sBtnGhost} onClick={() => setEditLoc(null)}>✕</button>
@@ -230,11 +228,9 @@ function ManageLocations({ locations, setLocations }) {
                 <td style={s.td}>{loc.type}</td>
                 <td style={s.td}>{loc.floor}</td>
                 <td style={s.td}>{loc.building || '—'}</td>
-                <td style={s.td}>{loc.x}</td>
-                <td style={s.td}>{loc.y}</td>
                 <td style={s.td}>
-                  <button style={s.sBtnOk} onClick={() => setEditLoc({ ...loc })}>✏️</button>{' '}
-                  <button style={s.sBtnDanger} onClick={() => delLoc(loc.id)}>🗑️</button>
+                  <button style={s.sBtnOk} onClick={() => setEditLoc({ ...loc })}>✏️ Edit</button>{' '}
+                  <button style={s.sBtnDanger} onClick={() => delLoc(loc.id)}>🗑️ Delete</button>
                 </td>
               </tr>
             ))}
@@ -249,44 +245,126 @@ function ManageLocations({ locations, setLocations }) {
 //  MANAGE USERS
 // ─────────────────────────────────────────────────────────────
 function ManageUsers({ session }) {
+  const emptyUser = { username: '', password: '', role: 'staff' }
+  const [users, setUsers]       = useState(DEMO_USERS)
+  const [newUser, setNewUser]   = useState(emptyUser)
+  const [editUser, setEditUser] = useState(null)
+  const [toast, setToast]       = useState('')
+  const [showPw, setShowPw]     = useState(false)
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 2500) }
+
+  const addUser = () => {
+    if (!newUser.username.trim() || !newUser.password.trim()) return
+    const user = { ...newUser, id: Date.now() }
+    setUsers(prev => [...prev, user])
+    setNewUser(emptyUser)
+    showToast('✅ User added!')
+  }
+
+  const saveUser = () => {
+    setUsers(prev => prev.map(u => u.id === editUser.id ? editUser : u))
+    setEditUser(null)
+    showToast('✅ User updated!')
+  }
+
+  const delUser = (id) => {
+    if (session?.id === id) { showToast('❌ Cannot delete active user!'); return }
+    setUsers(prev => prev.filter(u => u.id !== id))
+    showToast('🗑️ User deleted!')
+  }
+
   return (
     <div>
+      {toast && <div style={s.toast}>{toast}</div>}
       <p style={s.sectionTitle}>Manage Users</p>
-      <table style={s.tbl}>
-        <thead>
-          <tr>{['ID','Username','Role','Status'].map(h => <th key={h} style={s.th}>{h}</th>)}</tr>
-        </thead>
-        <tbody>
-          {DEMO_USERS.map(u => (
-            <tr key={u.id} style={{ borderBottom: '1px solid #0f1f35' }}>
-              <td style={s.td}>{u.id}</td>
-              <td style={s.td}>{u.username}</td>
-              <td style={s.td}>
-                <span style={{
-                  color: u.role === 'admin' ? '#f59e0b' : '#6eb6ff',
-                  fontSize: 10, fontWeight: 800,
-                  background: 'rgba(255,255,255,0.04)',
-                  padding: '2px 8px', borderRadius: 4,
-                  fontFamily: 'monospace',
-                }}>
-                  {u.role.toUpperCase()}
-                </span>
-              </td>
-              <td style={s.td}>
-                <span style={{
-                  color: session?.id === u.id ? '#1d9e75' : '#334155',
-                  fontSize: 10, fontFamily: 'monospace',
-                }}>
-                  {session?.id === u.id ? '● ACTIVE' : '○ —'}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+
+      {/* Add user form */}
+      <div style={s.formBox}>
+        <p style={s.formTitle}>➕ Add New User</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
+          <input style={s.inp} placeholder="Username"
+            value={newUser.username}
+            onChange={e => setNewUser(f => ({ ...f, username: e.target.value }))}/>
+          <input style={s.inp} placeholder="Password" type="password"
+            value={newUser.password}
+            onChange={e => setNewUser(f => ({ ...f, password: e.target.value }))}/>
+          <select style={s.inp} value={newUser.role}
+            onChange={e => setNewUser(f => ({ ...f, role: e.target.value }))}>
+            <option value="admin">Admin</option>
+            <option value="staff">Staff</option>
+          </select>
+        </div>
+        <button style={s.addBtn} onClick={addUser}>Add User</button>
+      </div>
+
+      {/* Users table */}
+      <div style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 500px)', borderRadius: 10, border: '1px solid #1e3a5f' }}>
+        <table style={{ ...s.tbl, fontSize: 'calc(12px + 0.25vw)' }}>
+          <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
+            <tr>{['ID','Username','Role','Status','Actions'].map(h => (
+              <th key={h} style={{ ...s.th, fontSize: 'calc(10px + 0.2vw)', padding: 'calc(10px + 0.2vw)' }}>{h}</th>
+            ))}</tr>
+          </thead>
+          <tbody>
+            {users.map(u => editUser?.id === u.id ? (
+              <tr key={u.id} style={{ background: '#0d1f35' }}>
+                <td style={s.td}>{u.id}</td>
+                <td style={s.td}>
+                  <input style={s.inpSm} value={editUser.username}
+                    onChange={e => setEditUser(f => ({ ...f, username: e.target.value }))}/>
+                </td>
+                <td style={s.td}>
+                  <input style={s.inpSm} value={editUser.password} type="password"
+                    onChange={e => setEditUser(f => ({ ...f, password: e.target.value }))}/>
+                </td>
+                <td style={s.td}>
+                  <select style={s.inpSm} value={editUser.role}
+                    onChange={e => setEditUser(f => ({ ...f, role: e.target.value }))}>
+                    <option value="admin">Admin</option>
+                    <option value="staff">Staff</option>
+                  </select>
+                </td>
+                <td style={s.td}>
+                  <button style={s.sBtnOk} onClick={saveUser}>✓ Save</button>{' '}
+                  <button style={s.sBtnGhost} onClick={() => setEditUser(null)}>✕</button>
+                </td>
+              </tr>
+            ) : (
+              <tr key={u.id} style={{ borderBottom: '1px solid #0f1f35' }}>
+                <td style={s.td}>{u.id}</td>
+                <td style={s.td}>{u.username}</td>
+                <td style={s.td}>
+                  <span style={{
+                    color: u.role === 'admin' ? '#f59e0b' : '#6eb6ff',
+                    fontSize: 'calc(10px + 0.15vw)', fontWeight: 800,
+                    background: 'rgba(255,255,255,0.04)',
+                    padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace',
+                  }}>
+                    {u.role.toUpperCase()}
+                  </span>
+                </td>
+                <td style={s.td}>
+                  <span style={{
+                    color: session?.id === u.id ? '#1d9e75' : '#334155',
+                    fontSize: 'calc(10px + 0.15vw)', fontFamily: 'monospace',
+                  }}>
+                    {session?.id === u.id ? '● ACTIVE' : '○ —'}
+                  </span>
+                </td>
+                <td style={s.td}>
+                  <button style={s.sBtnOk} onClick={() => setEditUser({ ...u })}>✏️ Edit</button>{' '}
+                  <button style={s.sBtnDanger} onClick={() => delUser(u.id)}>🗑️ Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       <div style={s.infoBox}>
         <p style={{ color: '#f59e0b', fontWeight: 700, marginBottom: 6 }}>🔒 Security Note</p>
-        <p style={{ color: '#4a7fb5', fontSize: 12, lineHeight: 1.6 }}>
+        <p style={{ color: '#4a7fb5', fontSize: 'calc(10px + 0.2vw)', lineHeight: 1.6 }}>
           Production deployment uses bcrypt password hashing, signed JWTs (HS256) with 1h expiry,
           HTTPS-only via IIS, RBAC middleware, and rate limiting on login endpoint.
         </p>
@@ -315,7 +393,16 @@ export default function AdminPage() {
   }
 
   return (
-    <div style={s.page}>
+    <div style={s.page} className="admin-root">
+      <style>{`
+        /* Scale admin panel for 1920x1080 Uperfect monitor */
+        .admin-root { font-size: calc(12px + 0.3vw); }
+        .admin-root table { font-size: calc(11px + 0.25vw); }
+        .admin-root input, .admin-root select, .admin-root button { 
+          font-size: calc(11px + 0.25vw) !important; 
+        }
+        .admin-root .admin-sidebar { width: calc(180px + 3vw); }
+      `}</style>
 
       {/* ── Sidebar ── */}
       <div style={s.sidebar}>
@@ -375,26 +462,27 @@ const s = {
   page: {
     background: '#0a1628', minHeight: '100vh', color: 'white',
     display: 'flex', fontFamily: "'Segoe UI', system-ui, sans-serif",
+    fontSize: 'calc(12px + 0.3vw)',
   },
 
   // Sidebar
   sidebar: {
-    width: '220px', background: '#0f2040',
+    width: 'calc(180px + 3vw)', background: '#0f2040',
     borderRight: '1px solid #1e3a5f',
     display: 'flex', flexDirection: 'column',
     flexShrink: 0,
   },
   sidebarLogo: {
-    padding: '20px 16px', borderBottom: '1px solid #1e3a5f',
+    padding: 'calc(14px + 0.3vw) 16px', borderBottom: '1px solid #1e3a5f',
     display: 'flex', alignItems: 'center', gap: 10,
   },
   logoBadge: {
     background: '#378add', color: 'white', fontWeight: 700,
-    fontSize: 13, padding: '6px 10px', borderRadius: 8,
+    fontSize: 'calc(11px + 0.2vw)', padding: '6px 10px', borderRadius: 8,
     letterSpacing: 2, flexShrink: 0,
   },
-  logoTitle: { fontSize: 13, fontWeight: 700, color: 'white', margin: 0 },
-  logoSub:   { fontSize: 10, color: '#4a7fb5', margin: 0 },
+  logoTitle: { fontSize: 'calc(11px + 0.2vw)', fontWeight: 700, color: 'white', margin: 0 },
+  logoSub:   { fontSize: 'calc(9px + 0.15vw)', color: '#4a7fb5', margin: 0 },
   nav:       { flex: 1, padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 4 },
   navItem: {
     display: 'flex', alignItems: 'center', gap: 10,
@@ -425,8 +513,8 @@ const s = {
   },
 
   // Main
-  main: { flex: 1, padding: '24px', overflowY: 'auto' },
-  sectionTitle: { fontSize: 20, fontWeight: 700, color: '#6eb6ff', marginBottom: 16 },
+  main: { flex: 1, padding: 'calc(16px + 0.5vw)', overflowY: 'auto' },
+  sectionTitle: { fontSize: 'calc(16px + 0.4vw)', fontWeight: 700, color: '#6eb6ff', marginBottom: 16 },
 
   // Dashboard
   statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 20 },
@@ -465,14 +553,14 @@ const s = {
   },
 
   // Table
-  tbl: { width: '100%', borderCollapse: 'collapse', fontSize: 12 },
+  tbl: { width: '100%', borderCollapse: 'collapse', fontSize: 'calc(11px + 0.25vw)' },
   th: {
     background: '#0f2040', color: '#4a7fb5',
-    padding: '10px 10px', textAlign: 'left',
+    padding: 'calc(8px + 0.2vw) calc(8px + 0.2vw)', textAlign: 'left',
     borderBottom: '1px solid #1e3a5f',
-    fontSize: 10, letterSpacing: '1px',
+    fontSize: 'calc(9px + 0.2vw)', letterSpacing: '1px',
   },
-  td: { padding: '10px 10px', color: '#c8ddf5', verticalAlign: 'middle' },
+  td: { padding: 'calc(8px + 0.2vw)', color: '#c8ddf5', verticalAlign: 'middle' },
   sBtnOk:     { fontSize: 12, background: '#0c3028', border: '1px solid #1d9e75', borderRadius: 6, color: '#1d9e75', padding: '3px 8px', cursor: 'pointer' },
   sBtnDanger: { fontSize: 12, background: '#1a0a0a', border: '1px solid #5a1a1a', borderRadius: 6, color: '#ef4444', padding: '3px 8px', cursor: 'pointer' },
   sBtnGhost:  { fontSize: 12, background: 'transparent', border: '1px solid #1e3a5f', borderRadius: 6, color: '#4a7fb5', padding: '3px 8px', cursor: 'pointer' },
@@ -529,9 +617,16 @@ const s = {
     fontFamily: 'inherit', width: '100%',
     transition: 'border-color 0.2s',
   },
-  pwWrap: { display: 'flex', alignItems: 'center', gap: 8 },
+  pwWrap: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+  },
   showPwBtn: {
+    position: 'absolute',
+    right: '12px',
     background: 'transparent', border: 'none',
     fontSize: 18, cursor: 'pointer', flexShrink: 0,
+    color: '#4a7fb5',
   },
 }
