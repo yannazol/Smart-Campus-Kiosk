@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import Strands from './Strands'
 
 // ─────────────────────────────────────────────────────────────
 //  KNOWLEDGE BASE
@@ -109,12 +110,11 @@ const QUICK_REPLIES = [
 ]
 
 // Keyboard rows with period and dash
-
 const KEYBOARD_ROWS = [
   ['1','2','3','4','5','6','7','8','9','0'],
-  ['Q','W','E','R','T','Y','U','I','O','P','⌫'],
+  ['Q','W','E','R','T','Y','U','I','O','P'],
   ['A','S','D','F','G','H','J','K','L'],
-  ['Z','X','C','V','B','N','M'],
+  ['Z','X','C','V','B','N','M','⌫'],
 ]
 
 const INITIAL_MSG = [{ from: 'bot', text: "Hi! 👋 I'm your Campus Navigator Bot. How can I help you today?", time: new Date().toISOString() }]
@@ -248,12 +248,33 @@ export default function ChatBot() {
 
           {/* header ----------------------------- */}
           <div style={s.header}>
-            <div style={s.headerLeft}>
-              <div style={s.botAvatar}>:)</div>
-              <div>
-                <p style={s.botName}>Campus BotBot</p>
-                <p style={s.botStatus}>● Online</p>
-              </div>
+            {/* Strands face */}
+            <div style={s.strandsWrap}>
+              <Strands
+                colors={["#378add","#0a1628","#6366f1","#1d9e75"]}
+                count={5}
+                speed={0.5}
+                amplitude={1.7}
+                waviness={1}
+                thickness={0.9}
+                glow={2.6}
+                taper={2.4}
+                spread={0.7}
+                intensity={0.55}
+                saturation={2}
+                opacity={1}
+                scale={1.1}
+                glass
+                refraction={1.1}
+                dispersion={1.05}
+                glassSize={0.54}
+                hueShift={0.08}
+              />
+            </div>
+            {/* Bot name + status */}
+            <div style={s.headerInfo}>
+              <p style={s.botName}>Campus AI</p>
+              <p style={s.botStatus}>● Online · Smart Navigator</p>
             </div>
           </div>
 
@@ -351,7 +372,24 @@ export default function ChatBot() {
       <button
         style={{ ...s.fab, animation: open ? 'fabPulseOpen 2s infinite' : 'fabPulse 3s infinite' }}
         onClick={() => { setOpen(p => !p); setShowKeyboard(false) }}>
-        💬
+        <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', position: 'absolute', inset: 0 }}>
+          <Strands
+            colors={["#378add","#0a1628","#6366f1","#1d9e75"]}
+            count={4}
+            speed={0.6}
+            amplitude={1.5}
+            waviness={1.2}
+            thickness={1.0}
+            glow={3}
+            taper={2}
+            spread={0.8}
+            intensity={0.7}
+            saturation={2}
+            opacity={1}
+            scale={1.2}
+            hueShift={0.1}
+          />
+        </div>
         {!open && messages.length > 1 && <div style={s.fabBadge}/>}
       </button>
     </>
@@ -364,12 +402,15 @@ const s = {
 
   fab: {
     position:'fixed', bottom:'6rem', right:'6rem',
-    background:'linear-gradient(135deg, #378add, #1d6fb5)',
-    border:'none', borderRadius:'50%',
-    width:'80px', height:'72px', fontSize:'30px',
+    background:'#0a1628',
+    border:'2px solid #378add',
+    borderRadius:'50%',
+    width:'80px', height:'72px',
     cursor:'pointer', zIndex:1000,
     transition:'transform 0.2s',
     display:'flex', alignItems:'center', justifyContent:'center',
+    overflow:'hidden',
+    padding:0,
   },
   fabBadge: {
     position:'absolute', top:'5px', right:'10px',
@@ -397,23 +438,31 @@ const s = {
   },
 
   header: {
-    display:'flex', alignItems:'center',
-    padding:'14px 18px',           
+    display:'flex', flexDirection:'column',
     background:'#0a1628',
     borderBottom:'1px solid #1e3a5f',
     flexShrink:0,
+    overflow:'hidden',
+  },
+  strandsWrap: {
+    width:'100%', height:'120px',
+    position:'relative', overflow:'hidden',
+  },
+  headerInfo: {
+    padding:'10px 18px 12px',
+    display:'flex', flexDirection:'column', gap:'2px',
   },
 
   headerLeft: { display:'flex', alignItems:'center', gap:'12px' },
   botAvatar: {
     width:'40px', height:'40px',
-    background:'linear-gradient(135deg, #378add, #1d6fb5)',
+    background:'linear-gradient(135deg, #378add, #6366f1)',
     borderRadius:'50%',
     display:'flex', alignItems:'center', justifyContent:'center',
     fontSize:'20px', flexShrink:0,
   },
 
-  botName:   { fontSize:'16px', fontWeight:'700', color:'white', margin:0 },
+  botName:   { fontSize:'16px', fontWeight:'700', color:'white', margin:0, letterSpacing:'0.5px' },
   botStatus: { fontSize:'12px', color:'#1d9e75', margin:0 },
 
   messages: {
@@ -425,7 +474,7 @@ const s = {
   msgRow: { display:'flex', alignItems:'flex-end', gap:'8px' },
   botAvatarSmall: {
     width:'28px', height:'28px',
-    background:'linear-gradient(135deg, #378add, #1d6fb5)',
+    background:'linear-gradient(135deg, #378add, #6366f1)',
     borderRadius:'50%',
     display:'flex', alignItems:'center', justifyContent:'center',
     fontSize:'14px', flexShrink:0,
