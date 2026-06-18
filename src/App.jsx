@@ -9,18 +9,14 @@ import AdminPage from './components/pages/AdminPage'
 import ChatBot from './components/pages/ChatBot'
 import IdleTimeout from './components/pages/IdleTimeout'
 
-const pageTransition = {
-  initial:    { opacity: 0, y: 10 },
-  animate:    { opacity: 1, y: 0  },
-  exit:       { opacity: 0, y: -6 },
-  transition: { duration: 0.22, ease: 'easeOut' },
-}
-
 function AnimatedPage({ children }) {
   return (
     <motion.div
-      style={{ width: '100%', height: '100%', background: '#0a1628' }}
-      {...pageTransition}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2, ease: 'easeInOut' }}
+      style={{ position: 'fixed', inset: 0, background: '#040e1f', overflow: 'auto' }}
     >
       {children}
     </motion.div>
@@ -33,7 +29,7 @@ function AppContent() {
 
   return (
     <>
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="sync">
         <Routes location={location} key={location.pathname}>
           <Route path="/"           element={<AnimatedPage><WelcomePage /></AnimatedPage>} />
           <Route path="/home"       element={<AnimatedPage><Home /></AnimatedPage>} />
@@ -52,6 +48,7 @@ function AppContent() {
 function App() {
   return (
     <BrowserRouter>
+      <div style={{ position: 'fixed', inset: 0, background: '#040e1f', zIndex: -1 }} />
       <AppContent />
     </BrowserRouter>
   )
