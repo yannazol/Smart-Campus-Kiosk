@@ -20,7 +20,7 @@ const KEYBOARD_ROWS = [
 ]
 const NUMBER_ROW = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 
-// ── Line icons — minimal stroke style, no fill ──────────────────
+// ---- Line icons - minimalist stroke style, no fill ------------
 const Icon = {
   Search: (p) => (
     <svg width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -70,7 +70,7 @@ const Icon = {
   ),
 }
 
-// ── Building config — group colors (Blue/Yellow/Green/Red family) ──
+// ---- Building configuration — name, color, icon, floors, and mini-map viewbox for floor plan cropping ----
 const BUILDINGS = [
   { id: 'Building 1', short: 'B1', color: '#0e417b', glow: 'rgba(74,144,226,0.30)',  Icon: Icon.Building, floors: [1,2,3,4] },
   { id: 'Building 2', short: 'B2', color: '#a09363', glow: 'rgba(245,197,24,0.30)',  Icon: Icon.Building, floors: [1,2,3,4] },
@@ -85,7 +85,7 @@ const BUILDING_VIEWBOX = {
   'Building 4': { x: 0.5,  y: 0,  w: 10, h: 10 },
 }
 
-// ── Mini Building Map ──────────────────────────────────────────
+// ---- Mini Building Map ----
 function MiniBuildingMap({ buildingName, floor, color }) {
   const blocks = FLOOR_BLOCKS[floor] || FLOOR_BLOCKS[1]
   const region = BUILDING_VIEWBOX[buildingName]
@@ -154,7 +154,7 @@ function MiniBuildingMap({ buildingName, floor, color }) {
   )
 }
 
-// ── Flip Card — glassmorphism with line icon ─────────────────────
+// ---- Flip Card — glassmorphism ----
 function BuildingCard({ building }) {
   const [flipped, setFlipped] = useState(false)
   const [activeFloor, setActiveFloor] = useState(1)

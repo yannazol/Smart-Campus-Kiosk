@@ -7,7 +7,7 @@ import {
 } from '../../data/campusData'
 import icctLogo from '../../assets/icct-logo.png'
 
-// ── Line icons — matches Home page exactly ──────────────────────
+// ----Line icons ----
 const Icon = {
   Home: (p) => (
     <svg width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -153,7 +153,7 @@ const ps = {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  CAMPUS SVG MAP — kept crisp, no glass (readability priority)
+//  CAMPUS SVG MAP — renders building outlines, room blocks, labels, edges, and animated path dot
 // ─────────────────────────────────────────────────────────────
 
 const BLDG_LABELS = {

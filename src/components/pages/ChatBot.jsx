@@ -66,7 +66,7 @@ const KB = [
     location: { name: 'Admission Office', query: 'Admission Office' }, 
     windows: null },
 
-  { keywords: ['library', 'book', 'reference', 'internet cafe', 'wifi'],
+  { keywords: ['library', 'book', 'reference', 'wifi'],
     answer: 'The **Library & Internet Cafe** is at Building 2, Ground Floor. Open during school hours!',
     location: { name: 'Library', query: 'Library' }, 
     windows: null },
@@ -160,7 +160,7 @@ export default function ChatBot() {
   const messagesEndRef = useRef(null)
   const overlayRef     = useRef(null)
 
-  // ── Draggable FAB position (persists across mounts via state init) ──
+  // ---- Draggable FAB position ----
   const [fabPos, setFabPos] = useState(() => ({
     x: window.innerWidth - FAB_SIZE - 96,
     y: window.innerHeight - FAB_SIZE - 96,
@@ -226,7 +226,7 @@ export default function ChatBot() {
     }
   }, [])
 
-  // ── Panel position — anchored near the FAB, flips to stay on screen ──
+  // ---- Panel position ----
   const panelStyle = (() => {
     const panelW = 600, panelH = 800
     const spaceBelow = window.innerHeight - (fabPos.y + FAB_SIZE)
@@ -338,7 +338,7 @@ export default function ChatBot() {
       {open && (
         <div style={{ ...s.panel, ...panelStyle }}>
 
-          {/* header — clean, no avatar ----------------------------- */}
+          {/* header ----------------------------- */}
           <div style={s.header}>
             <div style={s.headerRow}>
               <span style={s.sparkle}>✨</span>
