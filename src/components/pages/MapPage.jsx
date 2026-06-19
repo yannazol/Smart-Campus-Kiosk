@@ -5,6 +5,56 @@ import {
   TYPE_META, KIOSK_NODE_ID, SCALE,
   sx, sy, findLocationByName, fetchNavigation,
 } from '../../data/campusData'
+import icctLogo from '../../assets/icct-logo.png'
+
+// ── Line icons — matches Home page exactly ──────────────────────
+const Icon = {
+  Home: (p) => (
+    <svg width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>
+    </svg>
+  ),
+  Pin: (p) => (
+    <svg width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+    </svg>
+  ),
+  List: (p) => (
+    <svg width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+      <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+    </svg>
+  ),
+  Image: (p) => (
+    <svg width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+    </svg>
+  ),
+  QrCode: (p) => (
+    <svg width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/><line x1="14" y1="14" x2="14" y2="14.01"/>
+      <line x1="14" y1="21" x2="14" y2="21.01"/><line x1="21" y1="14" x2="21" y2="14.01"/>
+      <line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17.5" y1="17.5" x2="17.5" y2="17.51"/>
+    </svg>
+  ),
+  Map: (p) => (
+    <svg width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/>
+    </svg>
+  ),
+  AlertTriangle: (p) => (
+    <svg width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+  ),
+  Flag: (p) => (
+    <svg width={p.size||14} height={p.size||14} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 22V4a1 1 0 0 1 1-1h13.5a.5.5 0 0 1 .4.8L15 9l3.9 5.2a.5.5 0 0 1-.4.8H5"/>
+    </svg>
+  ),
+}
 
 // ─────────────────────────────────────────────────────────────
 //  QR CODE
@@ -54,7 +104,7 @@ function RoomPhoto({ location }) {
         />
       ) : (
         <div style={ps.placeholder}>
-          <div style={ps.placeholderIcon}>🏫</div>
+          <div style={{ color: '#7fa8bd' }}><Icon.Image size={28}/></div>
           <p style={ps.placeholderName}>{location?.name}</p>
           <p style={ps.placeholderSub}>
             {location?.type === 'library'    ? 'Reference books & reading area'   :
@@ -64,7 +114,7 @@ function RoomPhoto({ location }) {
              location?.type === 'lounge'     ? 'Visitor & student lounge area'    :
              'Campus room & facility'}
           </p>
-          <p style={ps.placeholderNote}>📷 Photo coming soon</p>
+          <p style={ps.placeholderNote}>Photo coming soon</p>
         </div>
       )}
     </div>
@@ -76,8 +126,8 @@ const ps = {
     width: '100%',
     borderRadius: 12,
     overflow: 'hidden',
-    border: '1px solid rgba(55,138,221,0.2)',
-    background: 'rgba(13,27,46,0.5)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(7,18,32,0.5)',
     backdropFilter: 'blur(8px)',
     WebkitBackdropFilter: 'blur(8px)',
   },
@@ -94,13 +144,12 @@ const ps = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    background: 'linear-gradient(135deg, rgba(13,27,46,0.4) 0%, rgba(15,32,64,0.6) 100%)',
+    background: 'linear-gradient(135deg, rgba(7,18,32,0.4) 0%, rgba(10,25,42,0.6) 100%)',
     padding: '12px',
   },
-  placeholderIcon:  { fontSize: 28, marginBottom: 4 },
-  placeholderName:  { fontSize: 12, fontWeight: 600, color: '#6eb6ff', textAlign: 'center' },
-  placeholderSub:   { fontSize: 10, color: '#8ab4d8', textAlign: 'center', lineHeight: 1.4 },
-  placeholderNote:  { fontSize: 9,  color: '#4a7fb5', marginTop: 4 },
+  placeholderName:  { fontSize: 12, fontWeight: 600, color: '#9B9BF5', textAlign: 'center', marginTop: 4 },
+  placeholderSub:   { fontSize: 10, color: '#7fa8bd', textAlign: 'center', lineHeight: 1.4 },
+  placeholderNote:  { fontSize: 9,  color: '#5a7a8a', marginTop: 4 },
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -108,10 +157,10 @@ const ps = {
 // ─────────────────────────────────────────────────────────────
 
 const BLDG_LABELS = {
-  'Building 1': { short: 'B1', color: '#378add' },
-  'Building 2': { short: 'B2', color: '#1d9e75' },
-  'Building 3': { short: 'B3', color: '#f59e0b' },
-  'Building 4': { short: 'B4', color: '#a78bfa' },
+  'Building 1': { short: 'B1', color: '#0e417b' },
+  'Building 2': { short: 'B2', color: '#a09363' },
+  'Building 3': { short: 'B3', color: '#317633' },
+  'Building 4': { short: 'B4', color: '#7c3785' },
 }
 
 function roomLabel(label, bw, bh) {
@@ -338,15 +387,15 @@ function CampusMap({ floor, destId, path }) {
         const isKiosk = loc.id === KIOSK_NODE_ID
         const isDest  = loc.id === destId
         const meta    = TYPE_META[loc.type] || { color: '#94a3b8' }
-        const r       = isKiosk || isDest ? 10 : 7
+        const r       = isKiosk || isDest ? 7 : 6
 
         return (
           <g key={loc.id}>
             {(isKiosk || isDest) && (
-              <circle cx={sx(loc.x)} cy={sy(loc.y)} r={r + 6}
+              <circle cx={sx(loc.x)} cy={sy(loc.y)} r={r + 3}
                 fill={isKiosk ? '#0ea5e922' : '#378add22'}>
                 <animate attributeName="r"
-                  values={`${r+4};${r+10};${r+4}`}
+                  values={`${r+2};${r+5};${r+2}`}
                   dur="2s" repeatCount="indefinite"/>
               </circle>
             )}
@@ -356,11 +405,13 @@ function CampusMap({ floor, destId, path }) {
               stroke={isKiosk ? '#0ea5e9' : isDest ? '#378add' : meta.color}
               strokeWidth={isKiosk || isDest ? 2.5 : 1.5}
             />
-            <text x={sx(loc.x)} y={sy(loc.y)}
-              textAnchor="middle" dominantBaseline="middle"
-              style={{ fontSize: 6.5, fill: '#fff', fontFamily: 'monospace', fontWeight: 700, pointerEvents: 'none' }}>
-              {isKiosk ? '📍' : isDest ? '🏁' : loc.id}
-            </text>
+            {!isKiosk && !isDest && (
+              <text x={sx(loc.x)} y={sy(loc.y)}
+                textAnchor="middle" dominantBaseline="middle"
+                style={{ fontSize: 6.5, fill: '#fff', fontFamily: 'monospace', fontWeight: 700, pointerEvents: 'none' }}>
+                {loc.id}
+              </text>
+            )}
             {(isKiosk || isDest) && (
               <text x={sx(loc.x)} y={sy(loc.y) + r + 8}
                 textAnchor="middle"
@@ -389,6 +440,16 @@ export default function MapPage() {
   const [directions, setDirections] = useState([])
   const [loading,    setLoading]    = useState(false)
 
+  useEffect(() => {
+    if (!document.getElementById('inter-font')) {
+      const link = document.createElement('link')
+      link.id = 'inter-font'
+      link.rel = 'stylesheet'
+      link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap'
+      document.head.appendChild(link)
+    }
+  }, [])
+
   const destLoc = useMemo(() => {
     if (!destQuery) return null
     const results = findLocationByName(destQuery)
@@ -410,7 +471,7 @@ export default function MapPage() {
         setPath(data.path || [])
         setDirections(data.directions || [])
       })
-      .catch(() => setDirections([{ icon: '⚠️', text: 'Could not load directions.', sub: '' }]))
+      .catch(() => setDirections([{ icon: 'warn', text: 'Could not load directions.', sub: '' }]))
       .finally(() => setLoading(false))
   }, [destId])
 
@@ -424,13 +485,14 @@ export default function MapPage() {
       <div style={s.ambientWrap}>
         <div style={s.ambient1}/>
         <div style={s.ambient2}/>
+        <div style={s.ambient3}/>
       </div>
 
-      {/* ── Top bar — glass ── */}
+      {/* ── Top bar — glass, real logo ── */}
       <div style={s.topBar}>
-        <button style={s.homeBtn} onClick={() => navigate('/home')}>
-          🏠 Home
-        </button>
+        <div style={s.topBarLeft}>
+          <img src={icctLogo} alt="ICCT Colleges" style={s.logoImg}/>
+        </div>
 
         <div style={s.floorRow}>
           <span style={s.floorLabel}>Floor:</span>
@@ -444,7 +506,9 @@ export default function MapPage() {
           ))}
         </div>
 
-        <div style={s.kioskBadge}>📍 Kiosk · GF · Building 4</div>
+        <div style={s.kioskBadge}>
+          <Icon.Pin size={13}/> Kiosk · GF · Building 4
+        </div>
       </div>
 
       {/* ── Body ── */}
@@ -464,7 +528,7 @@ export default function MapPage() {
 
           {/* 1. Destination */}
           <div style={s.sec}>
-            <p style={s.secLabel}>📍 Destination</p>
+            <p style={s.secLabel}><Icon.Pin size={12}/> Destination</p>
             {dest ? (
               <>
                 <p style={s.destName}>{dest.name}</p>
@@ -481,13 +545,13 @@ export default function MapPage() {
 
           {/* 2. Directions */}
           <div style={{ ...s.sec, flex: 1, overflowY: 'auto' }}>
-            <p style={s.secLabel}>📋 Directions</p>
+            <p style={s.secLabel}><Icon.List size={12}/> Directions</p>
             {loading ? (
               <p style={s.muted}>Loading directions...</p>
             ) : directions.length > 0 ? (
               directions.map((step, i) => (
                 <div key={i} style={s.step}>
-                  <div style={s.stepNum}>{step.icon || i + 1}</div>
+                  <div style={s.stepNum}>{i + 1}</div>
                   <div>
                     <p style={s.stepText}>{step.text}</p>
                     {step.sub && <p style={s.stepSub}>{step.sub}</p>}
@@ -506,7 +570,7 @@ export default function MapPage() {
           {/* 3. Room Photo */}
           {dest && (
             <div style={s.sec}>
-              <p style={s.secLabel}>🖼️ What it looks like</p>
+              <p style={s.secLabel}><Icon.Image size={12}/> What it looks like</p>
               <RoomPhoto location={dest}/>
             </div>
           )}
@@ -514,30 +578,39 @@ export default function MapPage() {
           {/* 4. QR Code */}
           {dest && (
             <div style={s.sec}>
-              <p style={s.secLabel}>📱 Scan to save on phone</p>
+              <p style={s.secLabel}><Icon.QrCode size={14}/> Scan to save on phone</p>
               <div style={s.qrRow}>
                 <QRCode
                   value={`${window.location.origin}/directions?to=${dest.id}&name=${encodeURIComponent(dest.name)}&floor=${dest.floor || 1}&building=${dest.building || ''}`}
-                  size={72}
+                  size={140}
                 />
                 <p style={s.muted}>Scan to save these directions on your phone.</p>
               </div>
             </div>
           )}
 
+          {/*Home button*/}
+          <div style={{ ...s.sec, borderBottom: 'none', marginTop: 'auto' }}>
+            <button style={s.homeBtnBottom} onClick={() => navigate('/home')}>
+              <Icon.Home size={18}/> Back to Home
+            </button>
+          </div>
+
           {/* Empty state */}
           {!dest && (
-            <div style={{ ...s.sec, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={s.emptyState}>
-                <span style={{ fontSize: 40 }}>🗺️</span>
-                <p style={{ ...s.muted, textAlign: 'center', lineHeight: 1.6 }}>
-                  Search for a location on the Home page to get directions here.
-                </p>
-                <button style={s.goHomeBtn} onClick={() => navigate('/home')}>
-                  Go to Search
-                </button>
+            <>
+              <div style={{ ...s.sec, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={s.emptyState}>
+                  <span style={{ color: '#7fa8bd' }}><Icon.Map size={44}/></span>
+                  <p style={{ ...s.muted, textAlign: 'center', lineHeight: 1.7 }}>
+                    Search for a location on the Home page to get directions here.
+                  </p>
+                  <button style={s.goHomeBtn} onClick={() => navigate('/home')}>
+                    Go to Search
+                  </button>
+                </div>
               </div>
-            </div>
+            </>
           )}
 
         </div>
@@ -550,75 +623,92 @@ export default function MapPage() {
 //  STYLES — glassmorphism on UI chrome, map stays crisp
 // ─────────────────────────────────────────────────────────────
 const s = {
-  page: { background:'#0a1628', height:'100vh', width:'100%', color:'white', display:'flex', flexDirection:'column', overflow:'hidden', fontFamily:"'Segoe UI',system-ui,sans-serif", position:'relative' },
+  page: {
+    background: 'linear-gradient(135deg, #040816 0%, #07182E 50%, #04111D 100%)',
+    height:'100vh', width:'100%', color:'white', display:'flex', flexDirection:'column',
+    overflow:'hidden', fontFamily:"'Inter',system-ui,sans-serif", position:'relative',
+  },
 
   ambientWrap: { position:'absolute', inset:0, pointerEvents:'none', zIndex:0, overflow:'hidden' },
-  ambient1: { position:'absolute', width:'420px', height:'420px', borderRadius:'50%', background:'radial-gradient(circle, rgba(55,138,221,0.10) 0%, transparent 70%)', top:'-10%', right:'10%', filter:'blur(50px)' },
-  ambient2: { position:'absolute', width:'380px', height:'380px', borderRadius:'50%', background:'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)', bottom:'-15%', left:'5%', filter:'blur(50px)' },
+  ambient1: { position:'absolute', width:'420px', height:'420px', borderRadius:'50%', background:'radial-gradient(circle, rgba(91,141,239,0.10) 0%, transparent 70%)', top:'-10%', right:'10%', filter:'blur(60px)' },
+  ambient2: { position:'absolute', width:'380px', height:'380px', borderRadius:'50%', background:'radial-gradient(circle, rgba(124,124,240,0.08) 0%, transparent 70%)', bottom:'-15%', left:'5%', filter:'blur(60px)' },
+  ambient3: { position:'absolute', width:'320px', height:'320px', borderRadius:'50%', background:'radial-gradient(circle, rgba(167,139,250,0.06) 0%, transparent 70%)', top:'40%', right:'30%', filter:'blur(65px)' },
 
   topBar: {
     display:'flex', alignItems:'center', justifyContent:'space-between',
-    padding:'10px 20px',
-    background:'rgba(15,32,64,0.55)',
-    backdropFilter:'blur(20px) saturate(150%)',
-    WebkitBackdropFilter:'blur(20px) saturate(150%)',
-    borderBottom:'1px solid rgba(55,138,221,0.18)',
+    padding:'8px 20px',
+    background:'rgba(7,24,46,0.55)',
+    backdropFilter:'blur(24px) saturate(160%)',
+    WebkitBackdropFilter:'blur(24px) saturate(160%)',
+    borderBottom:'1px solid rgba(255,255,255,0.08)',
     flexShrink:0, gap:12, position:'relative', zIndex:2,
   },
+  topBarLeft: { display:'flex', alignItems:'center', gap:14, flexShrink:0 },
+  logoImg: { height:'40px', width:'auto', display:'block', filter:'drop-shadow(0 2px 6px rgba(0,0,0,0.4))' },
   homeBtn: {
     background:'rgba(255,255,255,0.06)', backdropFilter:'blur(8px)',
-    border:'1px solid rgba(55,138,221,0.3)', borderRadius:10,
-    color:'#6eb6ff', fontSize:14, padding:'8px 16px', cursor:'pointer',
+    border:'1px solid rgba(124,124,240,0.3)', borderRadius:10,
+    color:'#9B9BF5', fontSize:14, padding:'8px 16px', cursor:'pointer',
     fontFamily:'inherit', flexShrink:0,
+    display:'flex', alignItems:'center', gap:6,
   },
   floorRow:    { display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' },
-  floorLabel:  { fontSize:12, color:'#8ab4d8', marginRight:4, flexShrink:0 },
+  floorLabel:  { fontSize:12, color:'#7fa8bd', marginRight:4, flexShrink:0, fontFamily:'inherit' },
   floorBtn: {
     background:'rgba(255,255,255,0.05)', backdropFilter:'blur(8px)',
     border:'1px solid rgba(255,255,255,0.1)', borderRadius:20,
-    color:'#8ab4d8', fontSize:12, padding:'6px 14px', cursor:'pointer',
+    color:'#7fa8bd', fontSize:12, padding:'6px 14px', cursor:'pointer',
     fontFamily:'inherit', transition:'all .15s',
   },
-  floorBtnActive: { background:'rgba(55,138,221,0.3)', border:'1px solid #378add', color:'#fff', boxShadow:'0 0 16px rgba(55,138,221,0.3)' },
+  floorBtnActive: { background:'rgba(124,124,240,0.3)', border:'1px solid #7C7CF0', color:'#fff', boxShadow:'0 0 16px rgba(124,124,240,0.3)' },
   kioskBadge: {
-    fontSize:12, color:'#f59e0b',
-    background:'rgba(245,158,11,0.08)', backdropFilter:'blur(8px)',
-    border:'1px solid rgba(245,158,11,0.3)', borderRadius:10,
+    fontSize:13, color:'#9B9BF5',
+    background:'rgba(124,124,240,0.08)', backdropFilter:'blur(8px)',
+    border:'1px solid rgba(124,124,240,0.3)', borderRadius:10,
     padding:'7px 14px', flexShrink:0,
+    display:'flex', alignItems:'center', gap:6,
   },
 
-  body: { flex:1, display:'grid', gridTemplateColumns:'1fr 320px', overflow:'hidden', position:'relative', zIndex:1 },
+  body: { flex:1, display:'grid', gridTemplateColumns:'1fr 380px', overflow:'hidden', position:'relative', zIndex:1 },
   mapWrap: { padding:14, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center' },
 
   panel: {
     display:'flex', flexDirection:'column',
-    background:'rgba(15,32,64,0.45)',
-    backdropFilter:'blur(20px) saturate(150%)',
-    WebkitBackdropFilter:'blur(20px) saturate(150%)',
-    borderLeft:'1px solid rgba(55,138,221,0.18)',
+    background:'rgba(7,18,32,0.45)',
+    backdropFilter:'blur(20px) saturate(160%)',
+    WebkitBackdropFilter:'blur(20px) saturate(160%)',
+    borderLeft:'1px solid rgba(255,255,255,0.08)',
     overflow:'hidden',
   },
-  sec: { borderBottom:'1px solid rgba(55,138,221,0.12)', padding:'14px 16px', flexShrink:0 },
-  secLabel: { fontSize:10, letterSpacing:'1.5px', color:'#8ab4d8', textTransform:'uppercase', marginBottom:8 },
-  destName: { fontSize:16, fontWeight:600, color:'#6eb6ff', marginBottom:4, lineHeight:1.3 },
-  destSub:  { fontSize:11, color:'#8ab4d8', marginBottom:4 },
-  destDesc: { fontSize:11, color:'#5a7a9a', lineHeight:1.6 },
-  muted:    { fontSize:12, color:'#8ab4d8', lineHeight:1.6 },
-  step:     { display:'flex', gap:10, alignItems:'flex-start', marginBottom:10 },
+  sec: { borderBottom:'1px solid rgba(255,255,255,0.06)', padding:'16px 20px', flexShrink:0 },
+  secLabel: { fontSize:12, letterSpacing:'1.2px', color:'#7fa8bd', textTransform:'uppercase', marginBottom:10, display:'flex', alignItems:'center', gap:7, fontWeight:600 },
+  destName: { fontSize:20, fontWeight:700, color:'#9B9BF5', marginBottom:6, lineHeight:1.3 },
+  destSub:  { fontSize:14, color:'#7fa8bd', marginBottom:6 },
+  destDesc: { fontSize:13, color:'#8aa5b8', lineHeight:1.6 },
+  muted:    { fontSize:14, color:'#7fa8bd', lineHeight:1.7 },
+  step:     { display:'flex', gap:12, alignItems:'flex-start', marginBottom:14 },
   stepNum: {
-    background:'rgba(55,138,221,0.12)', backdropFilter:'blur(4px)',
-    border:'1px solid rgba(55,138,221,0.3)', borderRadius:'50%',
-    width:26, height:26, display:'flex', alignItems:'center', justifyContent:'center',
-    fontSize:12, color:'#6eb6ff', flexShrink:0,
+    background:'rgba(124,124,240,0.12)', backdropFilter:'blur(4px)',
+    border:'1px solid rgba(124,124,240,0.3)', borderRadius:'50%',
+    width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center',
+    fontSize:14, color:'#9B9BF5', flexShrink:0, fontWeight:700,
   },
-  stepText: { fontSize:12, color:'#dceaf9', lineHeight:1.5, margin:0 },
-  stepSub:  { fontSize:10, color:'#8ab4d8', margin:0, marginTop:2 },
+  stepText: { fontSize:15, color:'#dceaf9', lineHeight:1.5, margin:0, fontWeight:500 },
+  stepSub:  { fontSize:12, color:'#7fa8bd', margin:0, marginTop:3 },
   qrRow:    { display:'flex', alignItems:'center', gap:12 },
   emptyState: { display:'flex', flexDirection:'column', alignItems:'center', gap:14, padding:20 },
   goHomeBtn: {
-    background:'rgba(55,138,221,0.85)', backdropFilter:'blur(8px)',
-    border:'none', borderRadius:12, color:'white', fontSize:14,
+    background:'linear-gradient(135deg, #5B8DEF, #A78BFA)', backdropFilter:'blur(8px)',
+    border:'none', borderRadius:12, color:'#04141f', fontSize:14, fontWeight:700,
     padding:'11px 26px', cursor:'pointer', fontFamily:'inherit',
-    boxShadow:'0 4px 16px rgba(55,138,221,0.35)',
+    boxShadow:'0 4px 16px rgba(124,124,240,0.35)',
+  },
+  homeBtnBottom: {
+    width:'100%',
+    background:'rgba(255,255,255,0.06)', backdropFilter:'blur(8px)',
+    border:'1px solid rgba(124,124,240,0.3)', borderRadius:12,
+    color:'#9B9BF5', fontSize:15, fontWeight:600, padding:'12px 16px', cursor:'pointer',
+    fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:8,
+    transition:'background 0.15s',
   },
 }
