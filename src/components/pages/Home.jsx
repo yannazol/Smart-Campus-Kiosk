@@ -18,64 +18,40 @@ const KEYBOARD_ROWS = [
 ]
 const NUMBER_ROW = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 
-// ── Building config ────────────────────────────────────────────
 const BUILDINGS = [
-  { id: 'Building 1', short: 'B1', color: '#378add', glow: 'rgba(55,138,221,0.3)',  icon: '🏛️', floors: [1,2,3,4] },
-  { id: 'Building 2', short: 'B2', color: '#1d9e75', glow: 'rgba(29,158,117,0.3)', icon: '💻', floors: [1,2,3,4] },
-  { id: 'Building 3', short: 'B3', color: '#f59e0b', glow: 'rgba(245,158,11,0.3)', icon: '🏫', floors: [1,2,3,4] },
-  { id: 'Building 4', short: 'B4', color: '#a78bfa', glow: 'rgba(167,139,250,0.3)',icon: '🔬', floors: [1,2,3,4] },
+  { id: 'Building 1', short: 'B1', color: '#4CC9F0', glow: 'rgba(76,201,240,0.32)',  icon: '🏛️', floors: [1,2,3,4] },
+  { id: 'Building 2', short: 'B2', color: '#00D4AA', glow: 'rgba(0,212,170,0.32)',   icon: '💻', floors: [1,2,3,4] },
+  { id: 'Building 3', short: 'B3', color: '#FFC857', glow: 'rgba(255,200,87,0.32)',  icon: '🏫', floors: [1,2,3,4] },
+  { id: 'Building 4', short: 'B4', color: '#4CC9F0', glow: 'rgba(76,201,240,0.26)', icon: '🔬', floors: [1,2,3,4] },
 ]
 
-// ── Building name → viewbox region ────────────────────────────
-// Each building occupies a quadrant in the 22x22 grid
 const BUILDING_VIEWBOX = {
-  'Building 1': { x: 11.5, y: 11, w: 10, h: 10 }, // bottom-right
-  'Building 2': { x: 11.5, y: 0,  w: 10, h: 10 }, // top-right
-  'Building 3': { x: 0.5,  y: 11, w: 10, h: 10 }, // bottom-left
-  'Building 4': { x: 0.5,  y: 0,  w: 10, h: 10 }, // top-left
+  'Building 1': { x: 11.5, y: 11, w: 10, h: 10 },
+  'Building 2': { x: 11.5, y: 0,  w: 10, h: 10 },
+  'Building 3': { x: 0.5,  y: 11, w: 10, h: 10 },
+  'Building 4': { x: 0.5,  y: 0,  w: 10, h: 10 },
 }
 
-// ── Mini Building Map ──────────────────────────────────────────
+// ── Mini Building Map — with "route line" draw-in animation ────
 function MiniBuildingMap({ buildingName, floor, color }) {
   const blocks = FLOOR_BLOCKS[floor] || FLOOR_BLOCKS[1]
   const region = BUILDING_VIEWBOX[buildingName]
   if (!region) return null
 
-  // SVG canvas size
-  const W = 260, H = 200
-  const PAD = 8
-
-  // Scale: map region coords → SVG pixels
+  const W = 260, H = 200, PAD = 8
   const sx = x => PAD + ((x - region.x) / region.w) * (W - PAD * 2)
   const sy = y => PAD + ((y - region.y) / region.h) * (H - PAD * 2)
 
-  // Only blocks that belong to this building
   const buildingBlocks = blocks.filter(b => {
-    if (b.label === buildingName) return true // the outline itself
+    if (b.label === buildingName) return true
     if (b.type === 'building' || b.type === 'hallway') return false
-    // Check if block overlaps with this building's region
-    const bRight  = b.x + b.w
-    const bBottom = b.y + b.h
-    const rRight  = region.x + region.w
-    const rBottom = region.y + region.h
-    return (
-      b.x < rRight && bRight > region.x &&
-      b.y < rBottom && bBottom > region.y
-    )
+    const bRight = b.x + b.w, bBottom = b.y + b.h
+    const rRight = region.x + region.w, rBottom = region.y + region.h
+    return b.x < rRight && bRight > region.x && b.y < rBottom && bBottom > region.y
   })
 
-  // Fill colors per type
-  const typeFill = {
-    office:   '#0d2040',
-    lab:      '#0d2535',
-    facility: '#0a1a2e',
-    stairs:   '#162d55',
-    elevator: '#1a3a6e',
-    hallway:  '#080f1e',
-    building: '#0a1628',
-  }
+  const typeFill = { office:'#0d2436', lab:'#0d2b30', facility:'#0a1d2a', stairs:'#16323d', elevator:'#1a3f4a', hallway:'#081420', building:'#081420' }
 
-  // Label helper
   function roomLabel(label, bw, bh) {
     if (!label || label.trim() === '') return { lines: [], fontSize: 6, lineH: 8 }
     const fontSize = Math.max(4.5, Math.min(7, bw / 10))
@@ -86,85 +62,46 @@ function MiniBuildingMap({ buildingName, floor, color }) {
     let cur = ''
     for (const w of words) {
       const test = cur ? `${cur} ${w}` : w
-      if (test.length > charsPerLine && cur) { lines.push(cur); cur = w }
-      else cur = test
+      if (test.length > charsPerLine && cur) { lines.push(cur); cur = w } else cur = test
     }
     if (cur) lines.push(cur)
     return { lines: lines.slice(0, maxLines), fontSize, lineH: fontSize + 2.5 }
   }
 
   return (
-    <svg
-      width="100%" height="100%"
-      viewBox={`0 0 ${W} ${H}`}
-      style={{ display: 'block', background: '#070d1a', borderRadius: 8 }}
-    >
-      {/* Building outline */}
-      <rect
-        x={PAD} y={PAD}
-        width={W - PAD * 2} height={H - PAD * 2}
-        rx="4"
-        fill="#0a1628"
-        stroke={color}
-        strokeWidth="1.5"
-      />
-
-      {/* Room blocks */}
+    <svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', background: '#081420', borderRadius: 8 }}>
+      <rect x={PAD} y={PAD} width={W-PAD*2} height={H-PAD*2} rx="4" fill="#081420" stroke={color} strokeWidth="1.5"/>
       {buildingBlocks.filter(b => b.label !== buildingName).map((b, i) => {
-        const bx = sx(b.x), by = sy(b.y)
-        const bw = sx(b.x + b.w) - sx(b.x)
-        const bh = sy(b.y + b.h) - sy(b.y)
+        const bx=sx(b.x), by=sy(b.y), bw=sx(b.x+b.w)-sx(b.x), bh=sy(b.y+b.h)-sy(b.y)
         if (bw < 2 || bh < 2) return null
-        const fill = typeFill[b.type] || '#0d1b2e'
-        const stroke = b.type === 'stairs' ? color + '88'
-          : b.type === 'elevator' ? color
-          : '#1a3a5c'
-        const cx = bx + bw / 2
-        const cy = by + bh / 2
-        const { lines, fontSize, lineH } = roomLabel(b.label, bw, bh)
-        const totalH = lines.length * lineH
-        const startY = cy - totalH / 2 + lineH / 2
-
+        const fill = typeFill[b.type] || '#0d2030'
+        const stroke = b.type==='stairs' ? color+'88' : b.type==='elevator' ? color : '#1e3a48'
+        const cx=bx+bw/2, cy=by+bh/2
+        const {lines, fontSize, lineH} = roomLabel(b.label, bw, bh)
+        const totalH=lines.length*lineH, startY=cy-totalH/2+lineH/2
         return (
           <g key={i}>
-            <rect x={bx} y={by} width={bw} height={bh} rx="2"
-              fill={fill} stroke={stroke} strokeWidth="0.8" opacity="0.95"
-            />
-            {bw > 14 && bh > 8 && lines.map((line, li) => (
-              <text key={li}
-                x={cx} y={startY + li * lineH}
-                textAnchor="middle" dominantBaseline="middle"
-                style={{ fontSize, fill: '#3a6a8e', fontFamily: 'monospace', pointerEvents: 'none', userSelect: 'none' }}
-              >
-                {line}
-              </text>
+            <rect x={bx} y={by} width={bw} height={bh} rx="2" fill={fill} stroke={stroke} strokeWidth="0.8" opacity="0.95"/>
+            {bw>14 && bh>8 && lines.map((line,li) => (
+              <text key={li} x={cx} y={startY+li*lineH} textAnchor="middle" dominantBaseline="middle"
+                style={{fontSize, fill:'#3a7a8e', fontFamily:'monospace', pointerEvents:'none', userSelect:'none'}}>{line}</text>
             ))}
           </g>
         )
       })}
-
-      {/* Building label watermark */}
-      <text
-        x={W / 2} y={H / 2}
-        textAnchor="middle" dominantBaseline="middle"
-        style={{ fontSize: 48, fill: color, fontFamily: 'monospace', fontWeight: 700, opacity: 0.06, pointerEvents: 'none', userSelect: 'none' }}
-      >
-        {buildingName.replace('Building ', 'B')}
+      <text x={W/2} y={H/2} textAnchor="middle" dominantBaseline="middle"
+        style={{fontSize:48, fill:color, fontFamily:'monospace', fontWeight:700, opacity:0.06, pointerEvents:'none', userSelect:'none'}}>
+        {buildingName.replace('Building ','B')}
       </text>
-
-      {/* Floor label */}
-      <text
-        x={W - PAD - 2} y={H - PAD - 2}
-        textAnchor="end" dominantBaseline="auto"
-        style={{ fontSize: 8, fill: color, fontFamily: 'monospace', fontWeight: 700, opacity: 0.7 }}
-      >
+      <text x={W-PAD-2} y={H-PAD-2} textAnchor="end" dominantBaseline="auto"
+        style={{fontSize:8, fill:color, fontFamily:'monospace', fontWeight:700, opacity:0.7}}>
         {FLOOR_LABELS[floor] || `Floor ${floor}`}
       </text>
     </svg>
   )
 }
 
-// ── Flip Card ──────────────────────────────────────────────────
+// ── Flip Card — glassmorphism with neon glow ────────────────────
 function BuildingCard({ building }) {
   const [flipped, setFlipped] = useState(false)
   const [activeFloor, setActiveFloor] = useState(1)
@@ -174,7 +111,6 @@ function BuildingCard({ building }) {
       style={{ width: '100%', height: '100%', perspective: '1000px', cursor: 'pointer' }}
       onClick={() => setFlipped(f => !f)}
     >
-      {/* Inject backface CSS once */}
       <style>{`
         .card-inner {
           position: relative; width: 100%; height: 100%;
@@ -186,61 +122,64 @@ function BuildingCard({ building }) {
           position: absolute; inset: 0;
           -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
-          border-radius: 18px;
+          border-radius: 20px;
           overflow: hidden;
         }
         .card-back { transform: rotateY(180deg); }
+
       `}</style>
 
       <div className={`card-inner${flipped ? ' flipped' : ''}`}>
 
-        {/* ── Front ── */}
+        {/* ── Front — glass + neon glow ── */}
         <div className="card-face" style={{
-          background: '#0f2040',
-          border: `1px solid ${building.color}44`,
-          boxShadow: `0 0 28px ${building.glow}`,
+          background: `linear-gradient(135deg, ${building.color}14 0%, rgba(7,24,46,0.65) 60%)`,
+          backdropFilter: 'blur(20px) saturate(160%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+          border: `1px solid rgba(255,255,255,0.08)`,
+          boxShadow: `0 8px 28px ${building.glow}, inset 0 1px 0 rgba(255,255,255,0.06)`,
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
         }}>
-          {/* Top color accent */}
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: building.color, borderRadius: '18px 18px 0 0' }} />
-          {/* Subtle glow bg */}
-          <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse at 50% 60%, ${building.color}10 0%, transparent 70%)`, pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: `linear-gradient(90deg, transparent, ${building.color}99, transparent)` }} />
+          <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse at 50% 0%, ${building.color}1e 0%, transparent 60%)`, pointerEvents: 'none' }} />
 
           <div style={{ fontSize: '44px', lineHeight: 1, marginBottom: '14px', position: 'relative' }}>{building.icon}</div>
-          <div style={{ fontSize: '42px', fontWeight: '900', letterSpacing: '3px', fontFamily: 'monospace', color: building.color, lineHeight: 1, marginBottom: '8px', position: 'relative' }}>{building.short}</div>
-          <div style={{ fontSize: '14px', color: '#4a7fb5', fontWeight: '500', marginBottom: '20px', position: 'relative' }}>{building.id}</div>
-          <div style={{ fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'monospace', color: building.color + '99', position: 'relative' }}>Tap to see map</div>
+          <div style={{ fontSize: '42px', fontWeight: '700', letterSpacing: '2px', fontFamily: "'Inter',sans-serif", color: building.color, lineHeight: 1, marginBottom: '8px', position: 'relative', textShadow: `0 0 16px ${building.color}66` }}>{building.short}</div>
+          <div style={{ fontSize: '14px', color: '#a8c5d4', fontWeight: '500', marginBottom: '20px', position: 'relative' }}>{building.id}</div>
+          <div style={{ fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', fontFamily: "'Inter',sans-serif", fontWeight: '600', color: building.color + 'cc', position: 'relative' }}>Tap to see map</div>
         </div>
 
-        {/* ── Back ── */}
-          <div className="card-face card-back" style={{
-          background: '#0a1628',
-          border: `1px solid ${building.color}55`,
+        {/* ── Back — glass ── */}
+        <div className="card-face card-back" style={{
+          background: 'rgba(7,18,32,0.72)',
+          backdropFilter: 'blur(22px) saturate(160%)',
+          WebkitBackdropFilter: 'blur(22px) saturate(160%)',
+          border: `1px solid rgba(255,255,255,0.08)`,
+          boxShadow: `0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)`,
           display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'space-between',}}
->
-          {/* Top color accent */}
-          <div style={{ height: '4px', background: building.color, borderRadius: '18px 18px 0 0', flexShrink: 0 }} />
+        }}>
+          <div style={{ height: '2px', background: `linear-gradient(90deg, transparent, ${building.color}99, transparent)`, flexShrink: 0 }} />
 
-          {/* Header */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '10px 14px 8px', borderBottom: `1px solid ${building.color}22`, flexShrink: 0,
+            padding: '12px 14px 10px', borderBottom: `1px solid rgba(255,255,255,0.06)`, flexShrink: 0,
           }}>
-            <span style={{ fontSize: '14px', fontWeight: '800', letterSpacing: '1px', fontFamily: 'monospace', color: building.color }}>{building.id}</span>
+            <span style={{ fontSize: '14px', fontWeight: '700', letterSpacing: '0.5px', fontFamily: "'Inter',sans-serif", color: building.color }}>{building.id}</span>
             <div style={{ display: 'flex', gap: '4px' }}>
               {building.floors.map(f => (
                 <button key={f}
                   onClick={e => { e.stopPropagation(); setActiveFloor(f) }}
                   style={{
-                    background: activeFloor === f ? building.color : 'transparent',
-                    border: `1px solid ${activeFloor === f ? building.color : '#1e3a5f'}`,
-                    borderRadius: '6px',
-                    color: activeFloor === f ? '#fff' : '#4a7fb5',
+                    background: activeFloor === f ? building.color : 'rgba(255,255,255,0.04)',
+                    backdropFilter: activeFloor === f ? 'none' : 'blur(4px)',
+                    border: `1px solid ${activeFloor === f ? building.color : 'rgba(255,255,255,0.1)'}`,
+                    borderRadius: '8px',
+                    color: activeFloor === f ? '#04141f' : '#a8c5d4',
                     fontSize: '10px', fontWeight: '700',
-                    padding: '3px 7px', cursor: 'pointer',
-                    fontFamily: 'monospace', transition: 'all 0.15s',
+                    padding: '4px 8px', cursor: 'pointer',
+                    fontFamily: "'Inter',sans-serif", transition: 'all 0.15s',
+                    boxShadow: 'none',
                   }}
                 >
                   {f === 1 ? 'GF' : `${f}F`}
@@ -249,16 +188,14 @@ function BuildingCard({ building }) {
             </div>
           </div>
 
-          {/* Mini map */}
           <div style={{ flex: 1, padding: '8px', minHeight: 0, overflow: 'hidden' }}>
             <MiniBuildingMap buildingName={building.id} floor={activeFloor} color={building.color} />
           </div>
 
-          {/* Flip back hint */}
           <div style={{
-            textAlign: 'center', padding: '5px 0 8px',
+            textAlign: 'center', padding: '6px 0 10px',
             fontSize: '10px', letterSpacing: '1.5px', textTransform: 'uppercase',
-            fontFamily: 'monospace', color: building.color + '66', flexShrink: 0,
+            fontFamily: "'Inter',sans-serif", fontWeight: '600', color: building.color + '99', flexShrink: 0,
           }}>
             Tap to flip back
           </div>
@@ -282,6 +219,16 @@ export default function Home() {
   const backspaceHoldTimer = useRef(null)
   const isHolding = useRef(false)
   const longPressTimer = useRef(null)
+
+  useEffect(() => {
+    if (!document.getElementById('inter-font')) {
+      const link = document.createElement('link')
+      link.id = 'inter-font'
+      link.rel = 'stylesheet'
+      link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap'
+      document.head.appendChild(link)
+    }
+  }, [])
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000)
@@ -357,7 +304,14 @@ export default function Home() {
   return (
     <div style={styles.page}>
 
-      {/* ── Header ── */}
+      {/* Background: diagonal gradient + soft ambient glow only */}
+      <div style={styles.ambientWrap}>
+        <div style={styles.ambient1}/>
+        <div style={styles.ambient2}/>
+        <div style={styles.ambient3}/>
+      </div>
+
+      {/* ── Header — glass ── */}
       <div style={styles.header}>
         <div
           onMouseDown={handleCornerPressStart} onMouseUp={handleCornerPressEnd}
@@ -386,13 +340,13 @@ export default function Home() {
             <h1 style={styles.heading}>Where would you like to go?</h1>
           </div>
 
-          {/* Search bar */}
+          {/* Search bar — glass */}
           <div
             style={{ ...styles.searchBox, ...(isSearching ? styles.searchBoxActive : {}) }}
             onClick={(e) => { e.stopPropagation(); setIsSearching(true) }}
           >
             <span style={styles.searchIcon}>🔍</span>
-            <span style={{ flex: 1, fontSize: '20px', color: search ? 'white' : '#4a7fb5' }}>
+            <span style={{ flex: 1, fontSize: '20px', color: search ? 'white' : '#7fa8bd', fontFamily: "'Inter',sans-serif" }}>
               {search || 'Tap here to search for a location...'}
             </span>
             {search.length > 0 && (
@@ -400,7 +354,7 @@ export default function Home() {
             )}
           </div>
 
-          {/* Dropdown */}
+          {/* Dropdown — glass */}
           {isSearching && (
             <div style={styles.dropdown} onClick={(e) => e.stopPropagation()}>
               {recommendations.length > 0 ? (
@@ -447,7 +401,7 @@ export default function Home() {
           )}
         </div>
 
-        {/* ── Building Cards — only when not searching ── */}
+        {/* ── Building Cards ── */}
         {!isSearching && (
           <div style={styles.cardsSection} onClick={(e) => e.stopPropagation()}>
             <p style={styles.cardsLabel}>📍 Browse by Building</p>
@@ -459,7 +413,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ── Virtual Keyboard ── */}
+        {/* ── Virtual Keyboard — glass ── */}
         {isSearching && (
           <div style={styles.keyboard} onClick={(e) => e.stopPropagation()}>
             <div style={styles.keyRow}>
@@ -499,49 +453,103 @@ export default function Home() {
 }
 
 const styles = {
-  page: { background: '#0a1628', height: '100vh', width: '100%', color: 'white', display: 'flex', flexDirection: 'column', overflow: 'hidden' },
-  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.25rem', borderBottom: '1px solid #1e3a5f', background: '#0f2040', flexShrink: 0 },
+  page: {
+    background: 'linear-gradient(135deg, #040816 0%, #07182E 50%, #04111D 100%)',
+    height: '100vh', width: '100%', color: 'white', display: 'flex', flexDirection: 'column',
+    overflow: 'hidden', position: 'relative', fontFamily: "'Inter',system-ui,sans-serif",
+  },
+
+  ambientWrap: { position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' },
+  ambient1: { position: 'absolute', width: '480px', height: '480px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(76,201,240,0.08) 0%, transparent 70%)', top: '-12%', left: '-6%', filter: 'blur(60px)' },
+  ambient2: { position: 'absolute', width: '420px', height: '420px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,212,170,0.07) 0%, transparent 70%)', bottom: '-12%', right: '8%', filter: 'blur(65px)' },
+  ambient3: { position: 'absolute', width: '360px', height: '360px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,200,87,0.05) 0%, transparent 70%)', top: '35%', right: '25%', filter: 'blur(70px)' },
+
+  header: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    padding: '14px 28px',
+    background: 'rgba(7,24,46,0.55)',
+    backdropFilter: 'blur(24px) saturate(160%)',
+    WebkitBackdropFilter: 'blur(24px) saturate(160%)',
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
+    flexShrink: 0, position: 'relative', zIndex: 2,
+  },
   logoBox: { cursor: 'pointer', userSelect: 'none' },
-  logoPlaceholder: { background: '#378add', color: 'white', fontWeight: '700', fontSize: '22px', padding: '10px 18px', borderRadius: '10px', letterSpacing: '2px' },
+  logoPlaceholder: { background: 'linear-gradient(135deg, #4CC9F0, #00D4AA)', color: '#04141f', fontWeight: '800', fontSize: '26px', padding: '12px 22px', borderRadius: '12px', letterSpacing: '3px', boxShadow: '0 4px 20px rgba(76,201,240,0.35)' },
   kioskName: { display: 'flex', flexDirection: 'row', alignItems: 'center' },
   kioskTextBlock: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
-  kioskTitle: { fontSize: '26px', fontWeight: '700', color: 'white' },
-  kioskSub:   { fontSize: '13px', color: '#4a7fb5', marginTop: '2px' },
-  dateTime:   { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '20px' },
-  timeText:   { fontSize: '23px', fontWeight: '550', color: '#6eb6ff', fontVariantNumeric: 'tabular-nums', letterSpacing: '1px' },
-  timeDivider:{ fontSize: '22px', color: '#1e3a5f', fontWeight: '300' },
-  dateText:   { fontSize: '20px', color: '#8ab4d8', fontWeight: '400' },
-  main: { flex: 1, display: 'flex', flexDirection: 'column', padding: '1.25rem', overflow: 'hidden', gap: '10px' },
+  kioskTitle: { fontSize: '30px', fontWeight: '700', color: 'white', fontFamily: "'Inter',sans-serif" },
+  kioskSub:   { fontSize: '14px', color: '#7fa8bd', marginTop: '3px', fontFamily: "'Inter',sans-serif" },
+  dateTime:   { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '16px' },
+  timeText:   { fontSize: '34px', fontWeight: '600', color: '#4CC9F0', fontVariantNumeric: 'tabular-nums', letterSpacing: '1px', fontFamily: "'Inter',sans-serif" },
+  timeDivider:{ fontSize: '24px', color: 'rgba(255,255,255,0.15)', fontWeight: '300' },
+  dateText:   { fontSize: '22px', color: '#7fa8bd', fontWeight: '400', fontFamily: "'Inter',sans-serif" },
+
+  main: { flex: 1, display: 'flex', flexDirection: 'column', padding: '1.25rem', overflow: 'hidden', gap: '10px', position: 'relative', zIndex: 1 },
   topSection: { display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' },
-  heading: { fontSize: '60px', fontWeight: '300', textAlign: 'center', margin: 10 },
+  heading: { fontSize: '54px', fontWeight: '600', textAlign: 'center', margin: 10, fontFamily: "'Inter',sans-serif", letterSpacing: '-1px' },
   headingBlock: { display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '0.3rem', marginBottom: '0.5rem' },
-  searchBox: { display: 'flex', alignItems: 'center', background: '#0f2040', border: '2px solid #1e3a5f', borderRadius: '50px', padding: '16px 28px', gap: '14px', width: '100%', maxWidth: '960px', cursor: 'pointer', marginBottom: '0.75rem', minHeight: '64px', transition: 'border-color 0.2s' },
-  searchBoxActive: { border: '2px solid #378add' },
+
+  searchBox: {
+    display: 'flex', alignItems: 'center',
+    background: 'rgba(10,25,42,0.5)',
+    backdropFilter: 'blur(20px) saturate(160%)',
+    WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '50px', padding: '16px 28px', gap: '14px',
+    width: '100%', maxWidth: '960px', cursor: 'pointer',
+    marginBottom: '0.75rem', minHeight: '64px',
+    transition: 'border-color 0.2s, background 0.2s, box-shadow 0.2s',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
+  },
+  searchBoxActive: { border: '1px solid rgba(76,201,240,0.6)', background: 'rgba(10,25,42,0.7)', boxShadow: '0 8px 32px rgba(76,201,240,0.15), inset 0 1px 0 rgba(255,255,255,0.05)' },
   searchIcon: { fontSize: '22px' },
-  clearBtn: { background: 'transparent', border: 'none', color: '#4a7fb5', fontSize: '20px', cursor: 'pointer', padding: '4px 8px', minWidth: '44px', minHeight: '44px' },
+  clearBtn: { background: 'transparent', border: 'none', color: '#7fa8bd', fontSize: '20px', cursor: 'pointer', padding: '4px 8px', minWidth: '44px', minHeight: '44px' },
   persistRow:   { display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' },
-  persistLabel: { fontSize: '13px', color: '#4a7fb5' },
-  persistPill:  { background: '#162d55', border: '1px solid #378add', borderRadius: '20px', padding: '4px 16px', fontSize: '15px', color: '#6eb6ff' },
-  persistClear: { background: 'transparent', border: '1px solid #1e3a5f', borderRadius: '20px', padding: '4px 12px', fontSize: '13px', color: '#4a7fb5', cursor: 'pointer' },
-  dropdown: { width: '100%', maxWidth: '960px', background: '#0f2040', border: '1px solid #1e3a5f', borderRadius: '16px', padding: '1rem 1.25rem', marginBottom: '0.5rem' },
+  persistLabel: { fontSize: '13px', color: '#7fa8bd', fontFamily: "'Inter',sans-serif" },
+  persistPill:  { background: 'rgba(76,201,240,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(76,201,240,0.5)', borderRadius: '20px', padding: '4px 16px', fontSize: '15px', color: '#4CC9F0', fontFamily: "'Inter',sans-serif" },
+  persistClear: { background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '20px', padding: '4px 12px', fontSize: '13px', color: '#7fa8bd', cursor: 'pointer', fontFamily: "'Inter',sans-serif" },
+
+  dropdown: {
+    width: '100%', maxWidth: '960px',
+    background: 'rgba(7,18,32,0.65)',
+    backdropFilter: 'blur(28px) saturate(160%)',
+    WebkitBackdropFilter: 'blur(28px) saturate(160%)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '20px', padding: '1rem 1.25rem', marginTop: '4px',
+    boxShadow: '0 16px 48px rgba(0,0,0,0.4)',
+  },
   dropSection: { marginBottom: '0.75rem' },
-  dropLabel: { fontSize: '13px', color: '#4a7fb5', marginBottom: '8px', letterSpacing: '1px', textTransform: 'uppercase' },
+  dropLabel: { fontSize: '13px', color: '#7fa8bd', marginBottom: '8px', letterSpacing: '1px', textTransform: 'uppercase', fontFamily: "'Inter',sans-serif", fontWeight: '600' },
   chipRow: { display: 'flex', flexWrap: 'wrap', gap: '10px' },
-  chip: { background: '#162d55', border: '1px solid #1e3a5f', borderRadius: '24px', padding: '10px 20px', color: '#c8ddf5', fontSize: '17px', cursor: 'pointer', minHeight: '44px' },
-  chipCat:  { background: '#0c2d5a', color: '#6eb6ff' },
-  recoChip: { background: '#0c3825', border: '1px solid #1d9e75', borderRadius: '24px', padding: '10px 20px', color: '#3dcaa5', fontSize: '17px', cursor: 'pointer', minHeight: '44px' },
-  // Cards
+  chip: { background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', padding: '10px 20px', color: '#c8e0eb', fontSize: '17px', cursor: 'pointer', minHeight: '44px', fontFamily: "'Inter',sans-serif" },
+  chipCat:  { background: 'rgba(76,201,240,0.12)', border: '1px solid rgba(76,201,240,0.3)', color: '#4CC9F0' },
+  recoChip: { background: 'rgba(0,212,170,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(0,212,170,0.4)', borderRadius: '24px', padding: '10px 20px', color: '#00D4AA', fontSize: '17px', cursor: 'pointer', minHeight: '44px', fontFamily: "'Inter',sans-serif" },
+
   cardsSection: { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, paddingTop: '5rem' },
-  cardsLabel: { fontSize: '25px', letterSpacing: '2px', color: '#4a7fb5', textTransform: 'uppercase', fontFamily: 'monospace', marginBottom: '20px', textAlign: 'center' },
+  cardsLabel: { fontSize: '25px', letterSpacing: '2px', color: '#7fa8bd', textTransform: 'uppercase', fontFamily: "'Inter',sans-serif", fontWeight: '700', marginBottom: '20px', textAlign: 'center' },
   cardsGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '18px', width: '100%', flex: 1, minHeight: 0, maxHeight: '680px' },
-  // Keyboard
-  keyboard: { width: '100%', background: '#0f2040', border: '1px solid #1e3a5f', borderRadius: '16px', padding: '0.85rem 1rem', flexShrink: 0, marginTop: 'auto' },
+
+  keyboard: {
+    width: '100%',
+    background: 'rgba(7,18,32,0.55)',
+    backdropFilter: 'blur(22px) saturate(160%)',
+    WebkitBackdropFilter: 'blur(22px) saturate(160%)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: '20px', padding: '0.85rem 1rem', flexShrink: 0, marginTop: 'auto',
+    boxShadow: '0 16px 48px rgba(0,0,0,0.35)',
+  },
   keyRow: { display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '6px' },
-  key: { background: '#162d55', border: '1px solid #1e3a5f', borderRadius: '20px', color: 'white', fontSize: '23px', fontWeight: '600', padding: '16px 0', flex: 1, maxWidth: '180px', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.08s, transform 0.08s', minHeight: '80px' },
-  keyCaps:        { maxWidth: '106px', color: '#4a7fb5' },
-  keyCapsActive:  { background: '#1e3a5f', color: '#6eb6ff' },
+  key: {
+    background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(8px)',
+    border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', color: 'white',
+    fontSize: '23px', fontWeight: '600', padding: '16px 0', flex: 1, maxWidth: '180px',
+    cursor: 'pointer', fontFamily: "'Inter',sans-serif", transition: 'background 0.08s, transform 0.08s',
+    minHeight: '80px',
+  },
+  keyCaps:        { maxWidth: '106px', color: '#7fa8bd' },
+  keyCapsActive:  { background: 'rgba(76,201,240,0.25)', border: '1px solid rgba(76,201,240,0.5)', color: '#4CC9F0' },
   keyWide:        { maxWidth: '106px' },
   keySpace:       { maxWidth: '340px' },
-  keySearch:      { maxWidth: '150px', background: '#378add', border: '1px solid #378add', color: 'white' },
-  keySearchDisabled: { background: '#1e3a5f', border: '1px solid #1e3a5f', color: '#4a7fb5', cursor: 'not-allowed' },
+  keySearch:      { maxWidth: '150px', background: 'linear-gradient(135deg, #4CC9F0, #00D4AA)', border: 'none', color: '#04141f', fontWeight: '700', backdropFilter: 'none' },
+  keySearchDisabled: { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: '#5a7a8a', cursor: 'not-allowed' },
 }

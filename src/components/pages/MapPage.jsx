@@ -38,14 +38,9 @@ function QRCode({ value, size = 80 }) {
 
 // ─────────────────────────────────────────────────────────────
 //  ROOM PHOTO PLACEHOLDER
-//  Replace src with real image URL when photos are available
-//  Tip: add image_url field to MySQL locations table
 // ─────────────────────────────────────────────────────────────
 function RoomPhoto({ location }) {
   const [imgError, setImgError] = useState(false)
-
-  // If location has a real image_url from backend, use it
-  // Otherwise show a styled placeholder
   const hasImage = location?.image_url && !imgError
 
   return (
@@ -79,10 +74,12 @@ function RoomPhoto({ location }) {
 const ps = {
   wrap: {
     width: '100%',
-    borderRadius: 10,
+    borderRadius: 12,
     overflow: 'hidden',
-    border: '1px solid #1e3a5f',
-    background: '#0d1b2e',
+    border: '1px solid rgba(55,138,221,0.2)',
+    background: 'rgba(13,27,46,0.5)',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
   },
   img: {
     width: '100%',
@@ -97,17 +94,17 @@ const ps = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    background: 'linear-gradient(135deg, #0d1b2e 0%, #0f2040 100%)',
+    background: 'linear-gradient(135deg, rgba(13,27,46,0.4) 0%, rgba(15,32,64,0.6) 100%)',
     padding: '12px',
   },
   placeholderIcon:  { fontSize: 28, marginBottom: 4 },
   placeholderName:  { fontSize: 12, fontWeight: 600, color: '#6eb6ff', textAlign: 'center' },
-  placeholderSub:   { fontSize: 10, color: '#4a7fb5', textAlign: 'center', lineHeight: 1.4 },
-  placeholderNote:  { fontSize: 9,  color: '#1e3a5f', marginTop: 4 },
+  placeholderSub:   { fontSize: 10, color: '#8ab4d8', textAlign: 'center', lineHeight: 1.4 },
+  placeholderNote:  { fontSize: 9,  color: '#4a7fb5', marginTop: 4 },
 }
 
 // ─────────────────────────────────────────────────────────────
-//  CAMPUS SVG MAP
+//  CAMPUS SVG MAP — kept crisp, no glass (readability priority)
 // ─────────────────────────────────────────────────────────────
 
 const BLDG_LABELS = {
@@ -116,9 +113,6 @@ const BLDG_LABELS = {
   'Building 3': { short: 'B3', color: '#f59e0b' },
   'Building 4': { short: 'B4', color: '#a78bfa' },
 }
-
-// Types that should never show as clickable nodes — kept for reference
-// const HIDDEN_NODE_TYPES = new Set(['hallway'])
 
 function roomLabel(label, bw, bh) {
   if (!label || typeof label !== 'string' || label.trim() === '') return { lines: [], fontSize: 6, lineH: 8 }
@@ -155,7 +149,7 @@ function CampusMap({ floor, destId, path }) {
     <svg
       viewBox={`0 0 ${SCALE.W} ${SCALE.H}`}
       width="100%" height="100%"
-      style={{ background: '#070d1a', borderRadius: 10, border: '1px solid #1a2744', display: 'block' }}
+      style={{ background: '#070d1a', borderRadius: 14, border: '1px solid #1a2744', display: 'block', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
     >
       {/* ── PASS 1: Building outlines ── */}
       {blocks.filter(b => b.type === 'building').map((b, i) => {
@@ -205,26 +199,24 @@ function CampusMap({ floor, destId, path }) {
         )
       })}
 
-      {/* ── PASS 3: Building labels — centered, always on top ── */}
+      {/* ── PASS 3: Building labels ── */}
       {blocks.filter(b => b.type === 'building').map((b, i) => {
         const bx = sx(b.x), by = sy(b.y)
         const bw = sx(b.x + b.w) - sx(b.x)
         const bh = sy(b.y + b.h) - sy(b.y)
-        const cx = bx + bw / 2   // ← CENTER of building box
-        const cy = by + bh / 2   // ← CENTER of building box
+        const cx = bx + bw / 2
+        const cy = by + bh / 2
         const info = BLDG_LABELS[b.label]
         if (!info) return null
         const fs = Math.min(bw / 5, bh / 3, 36)
         return (
           <g key={`blbl-${i}`} style={{ pointerEvents: 'none' }}>
-            {/* Subtle background pill */}
             <rect
               x={cx - fs * 0.9} y={cy - fs * 0.65}
               width={fs * 1.8} height={fs * 1.2}
               rx="8"
               fill={info.color} opacity="0.12"
             />
-            {/* Big centered label */}
             <text
               x={cx} y={cy}
               textAnchor="middle" dominantBaseline="middle"
@@ -242,7 +234,7 @@ function CampusMap({ floor, destId, path }) {
         {FLOOR_LABELS[floor] || `Floor ${floor}`}
       </text>
 
-      {/* ── Edges (active path highlighted) ── */}
+      {/* ── Edges ── */}
       {EDGES.map(([a, b], i) => {
         const la = floorLocs.find(l => l.id === a)
         const lb = floorLocs.find(l => l.id === b)
@@ -261,7 +253,7 @@ function CampusMap({ floor, destId, path }) {
         )
       })}
 
-      {/* ── Animated dot on active path ── */}
+      {/* ── Animated dot ── */}
       {path.length > 1 && (() => {
         const pathD = path.reduce((d, id, i) => {
           const loc = floorLocs.find(l => l.id === id)
@@ -281,7 +273,7 @@ function CampusMap({ floor, destId, path }) {
         )
       })()}
 
-      {/* ── PASS 4: Pill labels — room codes, windows, entrance, exit only ── */}
+      {/* ── PASS 4: Pill labels ── */}
       {floorLocs.filter(l =>
         l.type !== 'hallway' &&
         l.id !== KIOSK_NODE_ID
@@ -292,7 +284,6 @@ function CampusMap({ floor, destId, path }) {
         const meta = TYPE_META[loc.type] || { color: '#6eb6ff' }
         const n = (loc.name || '').toLowerCase()
 
-        // Only show pill for: windows, room codes (B2.11 etc), entrance, exit
         const isWindow   = n.startsWith('window')
         const isRoomCode = /^b\d+\.\d+$/i.test(loc.name.trim())
         const isEntrance = n.includes('entrance')
@@ -300,12 +291,11 @@ function CampusMap({ floor, destId, path }) {
 
         if (!isWindow && !isRoomCode && !isEntrance && !isExit) return null
 
-        // Short label
         const label = isWindow
           ? 'W' + loc.name.replace(/[^0-9]/g, '')
           : isEntrance ? 'Entrance'
           : isExit     ? 'Exit'
-          : loc.name.trim()  // room code as-is e.g. B2.11
+          : loc.name.trim()
 
         const pillW = Math.max(18, label.length * 5.2 + 8)
         const pillH = 12
@@ -341,7 +331,7 @@ function CampusMap({ floor, destId, path }) {
         )
       })}
 
-      {/* ── PASS 5: Kiosk + destination nodes only ── */}
+      {/* ── PASS 5: Kiosk + destination nodes ── */}
       {floorLocs.filter(l =>
         l.id === KIOSK_NODE_ID || l.id === destId
       ).map(loc => {
@@ -352,7 +342,6 @@ function CampusMap({ floor, destId, path }) {
 
         return (
           <g key={loc.id}>
-            {/* Pulse ring for kiosk and destination */}
             {(isKiosk || isDest) && (
               <circle cx={sx(loc.x)} cy={sy(loc.y)} r={r + 6}
                 fill={isKiosk ? '#0ea5e922' : '#378add22'}>
@@ -361,20 +350,17 @@ function CampusMap({ floor, destId, path }) {
                   dur="2s" repeatCount="indefinite"/>
               </circle>
             )}
-            {/* Node circle */}
             <circle
               cx={sx(loc.x)} cy={sy(loc.y)} r={r}
               fill={isKiosk ? '#0c2240' : isDest ? '#0d2d4a' : '#0d1b2e'}
               stroke={isKiosk ? '#0ea5e9' : isDest ? '#378add' : meta.color}
               strokeWidth={isKiosk || isDest ? 2.5 : 1.5}
             />
-            {/* Icon / ID label */}
             <text x={sx(loc.x)} y={sy(loc.y)}
               textAnchor="middle" dominantBaseline="middle"
               style={{ fontSize: 6.5, fill: '#fff', fontFamily: 'monospace', fontWeight: 700, pointerEvents: 'none' }}>
               {isKiosk ? '📍' : isDest ? '🏁' : loc.id}
             </text>
-            {/* Name label below — only for kiosk and destination */}
             {(isKiosk || isDest) && (
               <text x={sx(loc.x)} y={sy(loc.y) + r + 8}
                 textAnchor="middle"
@@ -403,14 +389,12 @@ export default function MapPage() {
   const [directions, setDirections] = useState([])
   const [loading,    setLoading]    = useState(false)
 
-  // Find destination from URL param
   const destLoc = useMemo(() => {
     if (!destQuery) return null
     const results = findLocationByName(destQuery)
     return results.length > 0 ? results[0] : null
   }, [destQuery])
 
-  // Auto-select destination when page loads
   useEffect(() => {
     if (destLoc) {
       setDestId(destLoc.id)
@@ -418,7 +402,6 @@ export default function MapPage() {
     }
   }, [destLoc])
 
-  // Fetch directions when destination changes
   useEffect(() => {
     if (!destId) { setPath([]); setDirections([]); return }
     setLoading(true)
@@ -437,7 +420,13 @@ export default function MapPage() {
   return (
     <div style={s.page}>
 
-      {/* ── Top bar ── */}
+      {/* Ambient glow for glass to refract */}
+      <div style={s.ambientWrap}>
+        <div style={s.ambient1}/>
+        <div style={s.ambient2}/>
+      </div>
+
+      {/* ── Top bar — glass ── */}
       <div style={s.topBar}>
         <button style={s.homeBtn} onClick={() => navigate('/home')}>
           🏠 Home
@@ -461,7 +450,7 @@ export default function MapPage() {
       {/* ── Body ── */}
       <div style={s.body}>
 
-        {/* ── Map ── */}
+        {/* ── Map — crisp, no glass ── */}
         <div style={s.mapWrap}>
           <CampusMap
             floor={floor}
@@ -470,7 +459,7 @@ export default function MapPage() {
           />
         </div>
 
-        {/* ── Side panel ── */}
+        {/* ── Side panel — glass ── */}
         <div style={s.panel}>
 
           {/* 1. Destination */}
@@ -514,7 +503,7 @@ export default function MapPage() {
             )}
           </div>
 
-          {/* 3. Room Photo — after directions */}
+          {/* 3. Room Photo */}
           {dest && (
             <div style={s.sec}>
               <p style={s.secLabel}>🖼️ What it looks like</p>
@@ -536,7 +525,7 @@ export default function MapPage() {
             </div>
           )}
 
-          {/* Empty state — no destination */}
+          {/* Empty state */}
           {!dest && (
             <div style={{ ...s.sec, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={s.emptyState}>
@@ -558,31 +547,78 @@ export default function MapPage() {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  STYLES
+//  STYLES — glassmorphism on UI chrome, map stays crisp
 // ─────────────────────────────────────────────────────────────
 const s = {
-  page:    { background:'#0a1628', height:'100vh', width:'100%', color:'white', display:'flex', flexDirection:'column', overflow:'hidden', fontFamily:"'Segoe UI',system-ui,sans-serif" },
-  topBar:  { display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 20px', background:'#0f2040', borderBottom:'1px solid #1e3a5f', flexShrink:0, gap:12 },
-  homeBtn: { background:'#162d55', border:'1px solid #1e3a5f', borderRadius:8, color:'#6eb6ff', fontSize:14, padding:'8px 16px', cursor:'pointer', fontFamily:'inherit', flexShrink:0 },
+  page: { background:'#0a1628', height:'100vh', width:'100%', color:'white', display:'flex', flexDirection:'column', overflow:'hidden', fontFamily:"'Segoe UI',system-ui,sans-serif", position:'relative' },
+
+  ambientWrap: { position:'absolute', inset:0, pointerEvents:'none', zIndex:0, overflow:'hidden' },
+  ambient1: { position:'absolute', width:'420px', height:'420px', borderRadius:'50%', background:'radial-gradient(circle, rgba(55,138,221,0.10) 0%, transparent 70%)', top:'-10%', right:'10%', filter:'blur(50px)' },
+  ambient2: { position:'absolute', width:'380px', height:'380px', borderRadius:'50%', background:'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)', bottom:'-15%', left:'5%', filter:'blur(50px)' },
+
+  topBar: {
+    display:'flex', alignItems:'center', justifyContent:'space-between',
+    padding:'10px 20px',
+    background:'rgba(15,32,64,0.55)',
+    backdropFilter:'blur(20px) saturate(150%)',
+    WebkitBackdropFilter:'blur(20px) saturate(150%)',
+    borderBottom:'1px solid rgba(55,138,221,0.18)',
+    flexShrink:0, gap:12, position:'relative', zIndex:2,
+  },
+  homeBtn: {
+    background:'rgba(255,255,255,0.06)', backdropFilter:'blur(8px)',
+    border:'1px solid rgba(55,138,221,0.3)', borderRadius:10,
+    color:'#6eb6ff', fontSize:14, padding:'8px 16px', cursor:'pointer',
+    fontFamily:'inherit', flexShrink:0,
+  },
   floorRow:    { display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' },
-  floorLabel:  { fontSize:12, color:'#4a7fb5', marginRight:4, flexShrink:0 },
-  floorBtn:    { background:'#162d55', border:'1px solid #1e3a5f', borderRadius:20, color:'#4a7fb5', fontSize:12, padding:'5px 14px', cursor:'pointer', fontFamily:'inherit', transition:'all .15s' },
-  floorBtnActive:{ background:'#1e3a5f', border:'1px solid #378add', color:'#6eb6ff' },
-  kioskBadge:  { fontSize:12, color:'#f59e0b', background:'#1a1200', border:'1px solid #3a2800', borderRadius:8, padding:'6px 12px', flexShrink:0 },
-  body:    { flex:1, display:'grid', gridTemplateColumns:'1fr 300px', overflow:'hidden' },
-  mapWrap: { padding:12, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center' },
-  panel:   { display:'flex', flexDirection:'column', background:'#0f2040', borderLeft:'1px solid #1e3a5f', overflow:'hidden' },
-  sec:     { borderBottom:'1px solid #1e3a5f', padding:'12px 14px', flexShrink:0 },
-  secLabel:{ fontSize:10, letterSpacing:'1.5px', color:'#4a7fb5', textTransform:'uppercase', marginBottom:6 },
-  destName:{ fontSize:15, fontWeight:600, color:'#6eb6ff', marginBottom:3, lineHeight:1.3 },
-  destSub: { fontSize:11, color:'#4a7fb5', marginBottom:3 },
-  destDesc:{ fontSize:10, color:'#334d66', lineHeight:1.5 },
-  muted:   { fontSize:12, color:'#4a7fb5', lineHeight:1.6 },
-  step:    { display:'flex', gap:8, alignItems:'flex-start', marginBottom:8 },
-  stepNum: { background:'#162d55', border:'1px solid #1e3a5f', borderRadius:'50%', width:24, height:24, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, color:'#6eb6ff', flexShrink:0 },
-  stepText:{ fontSize:12, color:'#c8ddf5', lineHeight:1.5, margin:0 },
-  stepSub: { fontSize:10, color:'#4a7fb5', margin:0, marginTop:2 },
-  qrRow:   { display:'flex', alignItems:'center', gap:12 },
-  emptyState:{ display:'flex', flexDirection:'column', alignItems:'center', gap:12, padding:20 },
-  goHomeBtn: { background:'#378add', border:'none', borderRadius:10, color:'white', fontSize:14, padding:'10px 24px', cursor:'pointer', fontFamily:'inherit' },
+  floorLabel:  { fontSize:12, color:'#8ab4d8', marginRight:4, flexShrink:0 },
+  floorBtn: {
+    background:'rgba(255,255,255,0.05)', backdropFilter:'blur(8px)',
+    border:'1px solid rgba(255,255,255,0.1)', borderRadius:20,
+    color:'#8ab4d8', fontSize:12, padding:'6px 14px', cursor:'pointer',
+    fontFamily:'inherit', transition:'all .15s',
+  },
+  floorBtnActive: { background:'rgba(55,138,221,0.3)', border:'1px solid #378add', color:'#fff', boxShadow:'0 0 16px rgba(55,138,221,0.3)' },
+  kioskBadge: {
+    fontSize:12, color:'#f59e0b',
+    background:'rgba(245,158,11,0.08)', backdropFilter:'blur(8px)',
+    border:'1px solid rgba(245,158,11,0.3)', borderRadius:10,
+    padding:'7px 14px', flexShrink:0,
+  },
+
+  body: { flex:1, display:'grid', gridTemplateColumns:'1fr 320px', overflow:'hidden', position:'relative', zIndex:1 },
+  mapWrap: { padding:14, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center' },
+
+  panel: {
+    display:'flex', flexDirection:'column',
+    background:'rgba(15,32,64,0.45)',
+    backdropFilter:'blur(20px) saturate(150%)',
+    WebkitBackdropFilter:'blur(20px) saturate(150%)',
+    borderLeft:'1px solid rgba(55,138,221,0.18)',
+    overflow:'hidden',
+  },
+  sec: { borderBottom:'1px solid rgba(55,138,221,0.12)', padding:'14px 16px', flexShrink:0 },
+  secLabel: { fontSize:10, letterSpacing:'1.5px', color:'#8ab4d8', textTransform:'uppercase', marginBottom:8 },
+  destName: { fontSize:16, fontWeight:600, color:'#6eb6ff', marginBottom:4, lineHeight:1.3 },
+  destSub:  { fontSize:11, color:'#8ab4d8', marginBottom:4 },
+  destDesc: { fontSize:11, color:'#5a7a9a', lineHeight:1.6 },
+  muted:    { fontSize:12, color:'#8ab4d8', lineHeight:1.6 },
+  step:     { display:'flex', gap:10, alignItems:'flex-start', marginBottom:10 },
+  stepNum: {
+    background:'rgba(55,138,221,0.12)', backdropFilter:'blur(4px)',
+    border:'1px solid rgba(55,138,221,0.3)', borderRadius:'50%',
+    width:26, height:26, display:'flex', alignItems:'center', justifyContent:'center',
+    fontSize:12, color:'#6eb6ff', flexShrink:0,
+  },
+  stepText: { fontSize:12, color:'#dceaf9', lineHeight:1.5, margin:0 },
+  stepSub:  { fontSize:10, color:'#8ab4d8', margin:0, marginTop:2 },
+  qrRow:    { display:'flex', alignItems:'center', gap:12 },
+  emptyState: { display:'flex', flexDirection:'column', alignItems:'center', gap:14, padding:20 },
+  goHomeBtn: {
+    background:'rgba(55,138,221,0.85)', backdropFilter:'blur(8px)',
+    border:'none', borderRadius:12, color:'white', fontSize:14,
+    padding:'11px 26px', cursor:'pointer', fontFamily:'inherit',
+    boxShadow:'0 4px 16px rgba(55,138,221,0.35)',
+  },
 }

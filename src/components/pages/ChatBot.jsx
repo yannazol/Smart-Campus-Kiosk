@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Strands from './Strands'
 
@@ -120,6 +120,9 @@ const STRANDS_COLORS = ["#6f570d","#091dae","#5a0822"]
 
 const INITIAL_MSG = [{ from: 'bot', text: "Hi! 👋 I'm your Campus Navigator Bot. How can I help you today?", time: new Date().toISOString() }]
 
+const FAB_SIZE = 140
+const FAB_MARGIN = 16
+
 function getResponse(input) {
   const q = input.toLowerCase()
   for (const item of KB) {
@@ -132,30 +135,6 @@ function formatText(text) {
   const parts = text.split(/\*\*(.*?)\*\*/g)
   return parts.map((part, i) =>
     i % 2 === 1 ? <strong key={i} style={{ color: '#6eb6ff' }}>{part}</strong> : part
-  )
-}
-
-// Reusable glass orb avatar
-function BotOrb({ size = 56, live = true }) {
-  if (!live) {
-    return (
-      <div style={{
-        width: size, height: size, borderRadius: '50%', flexShrink: 0,
-        background: 'conic-gradient(from 180deg, #6f570d, #091dae, #5a0822, #6f570d)',
-        boxShadow: 'inset 0 0 8px rgba(0,0,0,0.4)',
-      }}/>
-    )
-  }
-  return (
-    <div style={{ width: size, height: size, borderRadius: '50%', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
-      <Strands
-        colors={STRANDS_COLORS}
-        count={3} speed={0.6} amplitude={1.5} waviness={1}
-        thickness={0.8} glow={2.5} taper={2} spread={0.7}
-        intensity={0.6} saturation={2} opacity={1} scale={1.2}
-        glass refraction={1.0} dispersion={1.0} glassSize={0.5} hueShift={0.08}
-      />
-    </div>
   )
 }
 
@@ -181,6 +160,91 @@ export default function ChatBot() {
   const messagesEndRef = useRef(null)
   const overlayRef     = useRef(null)
 
+  // ── Draggable FAB position (persists across mounts via state init) ──
+  const [fabPos, setFabPos] = useState(() => ({
+    x: window.innerWidth - FAB_SIZE - 96,
+    y: window.innerHeight - FAB_SIZE - 96,
+  }))
+  const dragState = useRef({ dragging: false, moved: false, startX: 0, startY: 0, origX: 0, origY: 0 })
+
+  const clampPos = useCallback((x, y) => {
+    const maxX = window.innerWidth - FAB_SIZE - FAB_MARGIN
+    const maxY = window.innerHeight - FAB_SIZE - FAB_MARGIN
+    return {
+      x: Math.min(Math.max(x, FAB_MARGIN), Math.max(maxX, FAB_MARGIN)),
+      y: Math.min(Math.max(y, FAB_MARGIN), Math.max(maxY, FAB_MARGIN)),
+    }
+  }, [])
+
+  useEffect(() => {
+    const onResize = () => setFabPos(p => clampPos(p.x, p.y))
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [clampPos])
+
+  const handleDragStart = (clientX, clientY) => {
+    dragState.current = {
+      dragging: true, moved: false,
+      startX: clientX, startY: clientY,
+      origX: fabPos.x, origY: fabPos.y,
+      startTime: Date.now(),
+    }
+  }
+  const handleDragMove = (clientX, clientY) => {
+    if (!dragState.current.dragging) return
+    const dx = clientX - dragState.current.startX
+    const dy = clientY - dragState.current.startY
+    // Require a real, deliberate drag: more distance AND not just a touch jitter
+    if (Math.abs(dx) > 12 || Math.abs(dy) > 12) dragState.current.moved = true
+    setFabPos(clampPos(dragState.current.origX + dx, dragState.current.origY + dy))
+  }
+  const handleDragEnd = () => {
+    const elapsed = Date.now() - (dragState.current.startTime || 0)
+    // A quick press (under 250ms) is always treated as a tap, regardless of tiny jitter
+    const wasMoved = dragState.current.moved && elapsed > 50
+    dragState.current.dragging = false
+    return wasMoved
+  }
+
+  const onFabMouseDown = (e) => { handleDragStart(e.clientX, e.clientY) }
+  const onFabTouchStart = (e) => { const t = e.touches[0]; handleDragStart(t.clientX, t.clientY) }
+  const onFabClick = () => { if (!dragState.current.moved) { setOpen(p => !p); setShowKeyboard(false) } }
+
+  useEffect(() => {
+    const onMouseMove = (e) => handleDragMove(e.clientX, e.clientY)
+    const onTouchMove = (e) => { if (dragState.current.dragging) { const t = e.touches[0]; handleDragMove(t.clientX, t.clientY) } }
+    const onMouseUp = () => { handleDragEnd() }
+    const onTouchEnd = () => { handleDragEnd() }
+
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
+    window.addEventListener('touchend', onTouchEnd)
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [])
+
+  // ── Panel position — anchored near the FAB, flips to stay on screen ──
+  const panelStyle = (() => {
+    const panelW = 600, panelH = 800
+    const spaceBelow = window.innerHeight - (fabPos.y + FAB_SIZE)
+    const spaceAbove = fabPos.y
+    const openUp = spaceAbove > spaceBelow
+    const spaceRight = window.innerWidth - fabPos.x
+    const openLeft = spaceRight < panelW + 40
+
+    const style = { position: 'fixed', width: `${Math.min(panelW, window.innerWidth - 32)}px`, height: `${Math.min(panelH, window.innerHeight - 32)}px` }
+    if (openUp) style.bottom = `${window.innerHeight - fabPos.y + 12}px`
+    else style.top = `${fabPos.y + FAB_SIZE + 12}px`
+    if (openLeft) style.right = `${window.innerWidth - fabPos.x - FAB_SIZE}px`
+    else style.left = `${fabPos.x}px`
+    return style
+  })()
+
   useEffect(() => {
     sessionStorage.setItem('chatbot_messages', JSON.stringify(messages))
   }, [messages])
@@ -188,6 +252,13 @@ export default function ChatBot() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, typing])
+
+  // Auto-close after long idle — extra WebGL safety net
+  useEffect(() => {
+    if (!open) return
+    const timer = setTimeout(() => setOpen(false), 5 * 60 * 1000)
+    return () => clearTimeout(timer)
+  }, [open, messages])
 
   const handleKey = (key) => {
     if (key === '⌫') { setInput(prev => prev.slice(0, -1)); return }
@@ -234,6 +305,9 @@ export default function ChatBot() {
   return (
     <>
       <style>{`
+
+        * { touch-action: manipulation; }
+
         @keyframes dotBounce {
           0%,80%,100% { transform:translateY(0);opacity:0.4; }
           40% { transform:translateY(-5px);opacity:1; }
@@ -243,12 +317,12 @@ export default function ChatBot() {
           to   { opacity:1; transform:translateY(0) scale(1); }
         }
         @keyframes fabPulse {
-          0%,100% { box-shadow:0 0 8px rgba(55,138,221,0.5); }
-          50%     { box-shadow:0 0 14px rgba(55,138,221,0.9); }
+          0%,100% { box-shadow:0 0 8px rgba(55,138,221,0.35); }
+          50%     { box-shadow:0 0 14px rgba(55,138,221,0.55); }
         }
         @keyframes fabPulseOpen {
-          0%,100% { box-shadow:0 0 20px rgba(55,138,221,0.8); }
-          50%     { box-shadow:0 0 36px rgba(55,138,221,1); }
+          0%,100% { box-shadow:0 0 10px rgba(55,138,221,0.5); }
+          50%     { box-shadow:0 0 18px rgba(55,138,221,0.7); }
         }
         @keyframes blink {
           0%,100% { opacity:1; }
@@ -260,15 +334,18 @@ export default function ChatBot() {
       `}</style>
 
       {/* Overlay */}
-      {open && <div ref={overlayRef} onClick={handleOverlayClick} style={s.overlay}/>}
+      <div ref={overlayRef} onClick={handleOverlayClick} style={{ ...s.overlay, pointerEvents: open ? 'auto' : 'none' }}/>
 
-      {/* Chat panel ----------------------------- */}
+      {/* Chat panel — anchored near FAB, flips to stay on screen ----------------------------- */}
       {open && (
-        <div style={s.panel}>
+        <div style={{ ...s.panel, ...panelStyle }}>
 
           {/* header — clean, no avatar ----------------------------- */}
           <div style={s.header}>
-            <p style={s.botName}>Campus AI</p>
+            <div style={s.headerRow}>
+              <span style={s.sparkle}>✨</span>
+              <p style={s.botName}>Campus AI</p>
+            </div>
             <p style={s.botStatus}>● Online · Smart Navigator</p>
           </div>
 
@@ -276,11 +353,6 @@ export default function ChatBot() {
           <div className="chatbot-messages" style={s.messages}>
             {messages.map((msg, i) => (
               <div key={i} style={{ ...s.msgRow, justifyContent: msg.from === 'user' ? 'flex-end' : 'flex-start' }}>
-                {msg.from === 'bot' && (() => {
-                    const botIndices = messages.map((m,idx) => m.from==='bot' ? idx : null).filter(v=>v!==null)
-                    const recentBotIndices = botIndices.slice(-3)
-                     return recentBotIndices.includes(i) ? <BotOrb size={56}/> : <div style={{width:56,flexShrink:0}}/>
-                        })()}
                 <div style={{ ...s.bubble, ...(msg.from === 'user' ? s.bubbleUser : s.bubbleBot) }}>
                   <p style={s.bubbleText}>{formatText(msg.text)}</p>
                   {msg.windows && <p style={s.windowHint}>🪟 {msg.windows}</p>}
@@ -295,7 +367,6 @@ export default function ChatBot() {
             ))}
             {typing && (
               <div style={{ ...s.msgRow, justifyContent: 'flex-start' }}>
-                <BotOrb size={56}/>
                 <div style={{ ...s.bubble, ...s.bubbleBot }}>
                   <div style={s.typingDots}>
                     {[0,150,300].map((d,i) => <span key={i} style={{ ...s.dot, animationDelay:`${d}ms` }}/>)}
@@ -365,22 +436,27 @@ export default function ChatBot() {
         </div>
       )}
 
-      {/* Floating bubble — Strands orb */}
+      {/* Floating bubble — draggable, Strands orb */}
       <button
-        style={{ ...s.fab, animation: open ? 'fabPulseOpen 2s infinite' : 'fabPulse 3s infinite' }}
-        onClick={() => {
-            requestAnimationFrame(() => {
-              setOpen(p => !p)
-                   setShowKeyboard(false)
-          })
-        }}>
-        <div style={{ width:'100%', height:'100%', borderRadius:'50%', overflow:'hidden', position:'absolute', inset:0 }}>
+        style={{
+          ...s.fab,
+          left: `${fabPos.x}px`,
+          top: `${fabPos.y}px`,
+          animation: open ? 'fabPulseOpen 2s infinite' : 'fabPulse 3s infinite',
+          outline: 'none', WebkitTapHighlightColor: 'transparent',
+          touchAction: 'manipulation',
+        }}
+        onMouseDown={onFabMouseDown}
+        onTouchStart={onFabTouchStart}
+        onClick={onFabClick}
+      >
+        <div style={{ width:'100%', height:'100%', borderRadius:'50%', overflow:'hidden', position:'relative', pointerEvents: 'none' }}>
           <Strands
             colors={STRANDS_COLORS}
-            count={4} speed={0.6} amplitude={1.5} waviness={1.5}
-            thickness={0.8} glow={2} taper={2.4} spread={1.2}
-            intensity={0.7} saturation={2} opacity={1} scale={1.6}
-            glass refraction={1.5} dispersion={1.2} glassSize={1.2} hueShift={0.1}
+            count={5} speed={0.6} amplitude={1.6} waviness={1.3}
+            thickness={1.0} glow={2.2} taper={2} spread={0.9}
+            intensity={0.75} saturation={2} opacity={1} scale={1.4}
+            glass refraction={1.2} dispersion={1.1} glassSize={1} hueShift={0.1}
           />
         </div>
       </button>
@@ -393,30 +469,16 @@ const s = {
   overlay: { position:'fixed', inset:0, zIndex:998, background:'transparent' },
 
   fab: {
-    position:'fixed', bottom:'6rem', right:'6rem',
+    position:'fixed',
     background:'transparent',
     border:'none', borderRadius:'50%',
-    width:'100px', height:'100px',
-    cursor:'pointer', zIndex:1000,
-    transition:'transform 0.2s',
+    width:`${FAB_SIZE}px`, height:`${FAB_SIZE}px`,
+    cursor:'grab', zIndex:1000,
     display:'flex', alignItems:'center', justifyContent:'center',
     overflow:'hidden', padding:0,
-    outline:'none',
-    WebkitTapHighlightColor:'transparent',
-  },
-  fabBadge: {
-    position:'absolute', top:'5px', right:'10px',
-    width:'12px', height:'12px',
-    background:'#cdb07f', borderRadius:'50%',
-    border:'2px solid #0a1628',
   },
 
   panel: {
-    position:'fixed',
-    bottom:'10rem',
-    right:'11rem',
-    width:'600px',
-    height:'800px',
     background:'#0f2040',
     border:'1px solid #1e3a5f',
     borderRadius:'20px',
@@ -436,6 +498,8 @@ const s = {
     flexShrink:0,
   },
 
+  headerRow: { display:'flex', alignItems:'center', gap:'8px' },
+  sparkle: { fontSize:'18px' },
   botName:   { fontSize:'16px', fontWeight:'700', color:'white', margin:0 },
   botStatus: { fontSize:'12px', color:'#1d9e75', margin:0 },
 
@@ -445,7 +509,7 @@ const s = {
     display:'flex', flexDirection:'column', gap:'25px',
   },
 
-  msgRow: { display:'flex', alignItems:'center', gap:'8px' },
+  msgRow: { display:'flex', alignItems:'flex-end', gap:'8px' },
 
   bubble: { maxWidth:'78%', padding:'12px 14px', borderRadius:'16px', wordBreak:'break-word' },
   bubbleBot:  { background:'#162d55', border:'1px solid #1e3a5f', borderBottomLeftRadius:'4px' },
