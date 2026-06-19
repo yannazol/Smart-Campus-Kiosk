@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FLOOR_BLOCKS, FLOOR_LABELS } from '../../data/campusData'
+import icctLogo from '../../assets/icct-logo.png'
+import campusPhoto from '../../assets/icct-campus.jpg'
 
 const POPULAR = ['Registrar', 'Library', 'Canteen', 'Guidance Office', 'Accounting', 'Academic Affairs', 'Theater']
 const CATEGORIES = ['Offices', 'Laboratories', 'Rooms', 'Facilities']
@@ -18,11 +20,62 @@ const KEYBOARD_ROWS = [
 ]
 const NUMBER_ROW = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 
+// ── Line icons — minimal stroke style, no fill ──────────────────
+const Icon = {
+  Search: (p) => (
+    <svg width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  ),
+  Pin: (p) => (
+    <svg width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+    </svg>
+  ),
+  Columns: (p) => (
+    <svg width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/>
+    </svg>
+  ),
+  Monitor: (p) => (
+    <svg width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+    </svg>
+  ),
+  Building: (p) => (
+    <svg width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="2" width="16" height="20" rx="1"/><line x1="9" y1="7" x2="9" y2="7.01"/><line x1="15" y1="7" x2="15" y2="7.01"/>
+      <line x1="9" y1="12" x2="9" y2="12.01"/><line x1="15" y1="12" x2="15" y2="12.01"/><path d="M9 22v-4h6v4"/>
+    </svg>
+  ),
+  Flask: (p) => (
+    <svg width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 2v6L3.5 18.5A2 2 0 0 0 5.3 21h13.4a2 2 0 0 0 1.8-2.5L15 8V2"/><line x1="8" y1="2" x2="16" y2="2"/><line x1="8.5" y1="13" x2="15.5" y2="13"/>
+    </svg>
+  ),
+  Close: (p) => (
+    <svg width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="2" strokeLinecap="round">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  ),
+  Flame: (p) => (
+    <svg width={p.size||14} height={p.size||14} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 17a2.5 2.5 0 0 0 2.5-2.5c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7.5 7.5 0 1 1-15 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+    </svg>
+  ),
+  Tag: (p) => (
+    <svg width={p.size||14} height={p.size||14} viewBox="0 0 24 24" fill="none" stroke={p.color||'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+    </svg>
+  ),
+}
+
+// ── Building config — group colors (Blue/Yellow/Green/Red family) ──
 const BUILDINGS = [
-  { id: 'Building 1', short: 'B1', color: '#4CC9F0', glow: 'rgba(76,201,240,0.32)',  icon: '🏛️', floors: [1,2,3,4] },
-  { id: 'Building 2', short: 'B2', color: '#00D4AA', glow: 'rgba(0,212,170,0.32)',   icon: '💻', floors: [1,2,3,4] },
-  { id: 'Building 3', short: 'B3', color: '#FFC857', glow: 'rgba(255,200,87,0.32)',  icon: '🏫', floors: [1,2,3,4] },
-  { id: 'Building 4', short: 'B4', color: '#4CC9F0', glow: 'rgba(76,201,240,0.26)', icon: '🔬', floors: [1,2,3,4] },
+  { id: 'Building 1', short: 'B1', color: '#0e417b', glow: 'rgba(74,144,226,0.30)',  Icon: Icon.Building, floors: [1,2,3,4] },
+  { id: 'Building 2', short: 'B2', color: '#a09363', glow: 'rgba(245,197,24,0.30)',  Icon: Icon.Building, floors: [1,2,3,4] },
+  { id: 'Building 3', short: 'B3', color: '#317633', glow: 'rgba(76,175,80,0.30)',   Icon: Icon.Building, floors: [1,2,3,4] },
+  { id: 'Building 4', short: 'B4', color: '#7c3785', glow: 'rgba(226,85,85,0.30)',   Icon: Icon.Building, floors: [1,2,3,4] },
 ]
 
 const BUILDING_VIEWBOX = {
@@ -32,7 +85,7 @@ const BUILDING_VIEWBOX = {
   'Building 4': { x: 0.5,  y: 0,  w: 10, h: 10 },
 }
 
-// ── Mini Building Map — with "route line" draw-in animation ────
+// ── Mini Building Map ──────────────────────────────────────────
 function MiniBuildingMap({ buildingName, floor, color }) {
   const blocks = FLOOR_BLOCKS[floor] || FLOOR_BLOCKS[1]
   const region = BUILDING_VIEWBOX[buildingName]
@@ -101,10 +154,11 @@ function MiniBuildingMap({ buildingName, floor, color }) {
   )
 }
 
-// ── Flip Card — glassmorphism with neon glow ────────────────────
+// ── Flip Card — glassmorphism with line icon ─────────────────────
 function BuildingCard({ building }) {
   const [flipped, setFlipped] = useState(false)
   const [activeFloor, setActiveFloor] = useState(1)
+  const CardIcon = building.Icon
 
   return (
     <div
@@ -126,12 +180,11 @@ function BuildingCard({ building }) {
           overflow: hidden;
         }
         .card-back { transform: rotateY(180deg); }
-
       `}</style>
 
       <div className={`card-inner${flipped ? ' flipped' : ''}`}>
 
-        {/* ── Front — glass + neon glow ── */}
+        {/* ── Front — glass ── */}
         <div className="card-face" style={{
           background: `linear-gradient(135deg, ${building.color}14 0%, rgba(7,24,46,0.65) 60%)`,
           backdropFilter: 'blur(20px) saturate(160%)',
@@ -142,10 +195,12 @@ function BuildingCard({ building }) {
           alignItems: 'center', justifyContent: 'center',
         }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: `linear-gradient(90deg, transparent, ${building.color}99, transparent)` }} />
-          <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse at 50% 0%, ${building.color}1e 0%, transparent 60%)`, pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse at 50% 0%, ${building.color}1a 0%, transparent 60%)`, pointerEvents: 'none' }} />
 
-          <div style={{ fontSize: '44px', lineHeight: 1, marginBottom: '14px', position: 'relative' }}>{building.icon}</div>
-          <div style={{ fontSize: '42px', fontWeight: '700', letterSpacing: '2px', fontFamily: "'Inter',sans-serif", color: building.color, lineHeight: 1, marginBottom: '8px', position: 'relative', textShadow: `0 0 16px ${building.color}66` }}>{building.short}</div>
+          <div style={{ marginBottom: '16px', position: 'relative', color: building.color }}>
+            <CardIcon size={42}/>
+          </div>
+          <div style={{ fontSize: '40px', fontWeight: '700', letterSpacing: '1px', fontFamily: "'Inter',sans-serif", color: building.color, lineHeight: 1, marginBottom: '8px', position: 'relative', textShadow: `0 0 16px ${building.color}66` }}>{building.short}</div>
           <div style={{ fontSize: '14px', color: '#a8c5d4', fontWeight: '500', marginBottom: '20px', position: 'relative' }}>{building.id}</div>
           <div style={{ fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', fontFamily: "'Inter',sans-serif", fontWeight: '600', color: building.color + 'cc', position: 'relative' }}>Tap to see map</div>
         </div>
@@ -179,7 +234,6 @@ function BuildingCard({ building }) {
                     fontSize: '10px', fontWeight: '700',
                     padding: '4px 8px', cursor: 'pointer',
                     fontFamily: "'Inter',sans-serif", transition: 'all 0.15s',
-                    boxShadow: 'none',
                   }}
                 >
                   {f === 1 ? 'GF' : `${f}F`}
@@ -304,21 +358,23 @@ export default function Home() {
   return (
     <div style={styles.page}>
 
-      {/* Background: diagonal gradient + soft ambient glow only */}
+      {/* Background: campus photo + dark overlay gradient — gives glass real texture */}
       <div style={styles.ambientWrap}>
+        <img src={campusPhoto} alt="" style={styles.campusBg}/>
+        <div style={styles.campusOverlay}/>
         <div style={styles.ambient1}/>
         <div style={styles.ambient2}/>
         <div style={styles.ambient3}/>
       </div>
 
-      {/* ── Header — glass ── */}
+      {/* ── Header — glass, real logo, true-centered title ── */}
       <div style={styles.header}>
         <div
           onMouseDown={handleCornerPressStart} onMouseUp={handleCornerPressEnd}
           onMouseLeave={handleCornerPressEnd} onTouchStart={handleCornerPressStart}
           onTouchEnd={handleCornerPressEnd} style={styles.logoBox}
         >
-          <div style={styles.logoPlaceholder}>ICCT</div>
+          <img src={icctLogo} alt="ICCT Colleges" style={styles.logoImg}/>
         </div>
         <div style={styles.kioskName}>
           <div style={styles.kioskTextBlock}>
@@ -345,12 +401,12 @@ export default function Home() {
             style={{ ...styles.searchBox, ...(isSearching ? styles.searchBoxActive : {}) }}
             onClick={(e) => { e.stopPropagation(); setIsSearching(true) }}
           >
-            <span style={styles.searchIcon}>🔍</span>
+            <span style={{ color: '#7fa8bd', display: 'flex', alignItems: 'center' }}><Icon.Search size={22}/></span>
             <span style={{ flex: 1, fontSize: '20px', color: search ? 'white' : '#7fa8bd', fontFamily: "'Inter',sans-serif" }}>
               {search || 'Tap here to search for a location...'}
             </span>
             {search.length > 0 && (
-              <button onMouseDown={(e) => { e.preventDefault(); handleClear() }} style={styles.clearBtn}>✕</button>
+              <button onMouseDown={(e) => { e.preventDefault(); handleClear() }} style={styles.clearBtn}><Icon.Close size={18}/></button>
             )}
           </div>
 
@@ -359,11 +415,11 @@ export default function Home() {
             <div style={styles.dropdown} onClick={(e) => e.stopPropagation()}>
               {recommendations.length > 0 ? (
                 <div style={styles.dropSection}>
-                  <p style={styles.dropLabel}>📍 Suggestions</p>
+                  <p style={styles.dropLabel}><Icon.Pin size={13}/> Suggestions</p>
                   <div style={styles.chipRow}>
                     {recommendations.map((r) => (
                       <button key={r} onMouseDown={(e) => { e.preventDefault(); handleSearch(r) }} style={styles.recoChip}>
-                        🔍 {r}
+                        {r}
                       </button>
                     ))}
                   </div>
@@ -371,7 +427,7 @@ export default function Home() {
               ) : (
                 <>
                   <div style={styles.dropSection}>
-                    <p style={styles.dropLabel}>🔥 Popular Locations</p>
+                    <p style={styles.dropLabel}><Icon.Flame size={13}/> Popular Locations</p>
                     <div style={styles.chipRow}>
                       {POPULAR.map((place) => (
                         <button key={place} onMouseDown={(e) => { e.preventDefault(); handleSearch(place) }} style={styles.chip}>{place}</button>
@@ -379,7 +435,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div style={styles.dropSection}>
-                    <p style={styles.dropLabel}>🏷️ Categories</p>
+                    <p style={styles.dropLabel}><Icon.Tag size={13}/> Categories</p>
                     <div style={styles.chipRow}>
                       {CATEGORIES.map((cat) => (
                         <button key={cat} onMouseDown={(e) => { e.preventDefault(); handleSearch(cat) }} style={{ ...styles.chip, ...styles.chipCat }}>{cat}</button>
@@ -396,7 +452,7 @@ export default function Home() {
             <div style={styles.persistRow}>
               <span style={styles.persistLabel}>Searching for:</span>
               <span style={styles.persistPill}>{search}</span>
-              <button onMouseDown={(e) => { e.preventDefault(); handleClear() }} style={styles.persistClear}>✕ Clear</button>
+              <button onMouseDown={(e) => { e.preventDefault(); handleClear() }} style={styles.persistClear}>Clear</button>
             </div>
           )}
         </div>
@@ -404,7 +460,7 @@ export default function Home() {
         {/* ── Building Cards ── */}
         {!isSearching && (
           <div style={styles.cardsSection} onClick={(e) => e.stopPropagation()}>
-            <p style={styles.cardsLabel}>📍 Browse by Building</p>
+            <p style={styles.cardsLabel}><Icon.Pin size={14}/> Browse by Building</p>
             <div style={styles.cardsGrid}>
               {BUILDINGS.map(b => (
                 <BuildingCard key={b.id} building={b} />
@@ -460,33 +516,41 @@ const styles = {
   },
 
   ambientWrap: { position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' },
-  ambient1: { position: 'absolute', width: '480px', height: '480px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(76,201,240,0.08) 0%, transparent 70%)', top: '-12%', left: '-6%', filter: 'blur(60px)' },
-  ambient2: { position: 'absolute', width: '420px', height: '420px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,212,170,0.07) 0%, transparent 70%)', bottom: '-12%', right: '8%', filter: 'blur(65px)' },
-  ambient3: { position: 'absolute', width: '360px', height: '360px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,200,87,0.05) 0%, transparent 70%)', top: '35%', right: '25%', filter: 'blur(70px)' },
+  campusBg: {
+    position: 'absolute', inset: 0, width: '100%', height: '100%',
+    objectFit: 'cover', opacity: 0.16, filter: 'saturate(0.7) brightness(0.8)',
+  },
+  campusOverlay: {
+    position: 'absolute', inset: 0,
+    background: 'linear-gradient(135deg, rgba(4,8,22,0.88) 0%, rgba(7,24,46,0.82) 50%, rgba(4,17,29,0.92) 100%)',
+  },
+  ambient1: { position: 'absolute', width: '480px', height: '480px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(91,141,239,0.10) 0%, transparent 70%)', top: '-12%', left: '-6%', filter: 'blur(60px)' },
+  ambient2: { position: 'absolute', width: '420px', height: '420px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,124,240,0.08) 0%, transparent 70%)', bottom: '-12%', right: '8%', filter: 'blur(65px)' },
+  ambient3: { position: 'absolute', width: '360px', height: '360px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(167,139,250,0.07) 0%, transparent 70%)', top: '35%', right: '25%', filter: 'blur(70px)' },
 
   header: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '14px 28px',
+    padding: '10px 28px',
     background: 'rgba(7,24,46,0.55)',
     backdropFilter: 'blur(24px) saturate(160%)',
     WebkitBackdropFilter: 'blur(24px) saturate(160%)',
     borderBottom: '1px solid rgba(255,255,255,0.08)',
     flexShrink: 0, position: 'relative', zIndex: 2,
   },
-  logoBox: { cursor: 'pointer', userSelect: 'none' },
-  logoPlaceholder: { background: 'linear-gradient(135deg, #4CC9F0, #00D4AA)', color: '#04141f', fontWeight: '800', fontSize: '26px', padding: '12px 22px', borderRadius: '12px', letterSpacing: '3px', boxShadow: '0 4px 20px rgba(76,201,240,0.35)' },
-  kioskName: { display: 'flex', flexDirection: 'row', alignItems: 'center' },
+  logoBox: { cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center' },
+  logoImg: { height: '72px', width: 'auto', display: 'block', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.4))' },
+  kioskName: { display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' },
   kioskTextBlock: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
-  kioskTitle: { fontSize: '30px', fontWeight: '700', color: 'white', fontFamily: "'Inter',sans-serif" },
-  kioskSub:   { fontSize: '14px', color: '#7fa8bd', marginTop: '3px', fontFamily: "'Inter',sans-serif" },
-  dateTime:   { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '16px' },
-  timeText:   { fontSize: '34px', fontWeight: '600', color: '#4CC9F0', fontVariantNumeric: 'tabular-nums', letterSpacing: '1px', fontFamily: "'Inter',sans-serif" },
-  timeDivider:{ fontSize: '24px', color: 'rgba(255,255,255,0.15)', fontWeight: '300' },
-  dateText:   { fontSize: '22px', color: '#7fa8bd', fontWeight: '400', fontFamily: "'Inter',sans-serif" },
+  kioskTitle: { fontSize: '24px', fontWeight: '700', color: 'white', fontFamily: "'Inter',sans-serif", letterSpacing: '-0.3px' },
+  kioskSub:   { fontSize: '12px', color: '#7fa8bd', marginTop: '2px', fontFamily: "'Inter',sans-serif", letterSpacing: '0.3px' },
+  dateTime:   { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '14px' },
+  timeText:   { fontSize: '26px', fontWeight: '600', color: '#7C9CF0', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.5px', fontFamily: "'Inter',sans-serif" },
+  timeDivider:{ fontSize: '18px', color: 'rgba(255,255,255,0.15)', fontWeight: '300' },
+  dateText:   { fontSize: '16px', color: '#7fa8bd', fontWeight: '400', fontFamily: "'Inter',sans-serif" },
 
   main: { flex: 1, display: 'flex', flexDirection: 'column', padding: '1.25rem', overflow: 'hidden', gap: '10px', position: 'relative', zIndex: 1 },
   topSection: { display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' },
-  heading: { fontSize: '54px', fontWeight: '600', textAlign: 'center', margin: 10, fontFamily: "'Inter',sans-serif", letterSpacing: '-1px' },
+  heading: { fontSize: '48px', fontWeight: '600', textAlign: 'center', margin: 10, fontFamily: "'Inter',sans-serif", letterSpacing: '-1px' },
   headingBlock: { display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '0.3rem', marginBottom: '0.5rem' },
 
   searchBox: {
@@ -501,12 +565,11 @@ const styles = {
     transition: 'border-color 0.2s, background 0.2s, box-shadow 0.2s',
     boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
   },
-  searchBoxActive: { border: '1px solid rgba(76,201,240,0.6)', background: 'rgba(10,25,42,0.7)', boxShadow: '0 8px 32px rgba(76,201,240,0.15), inset 0 1px 0 rgba(255,255,255,0.05)' },
-  searchIcon: { fontSize: '22px' },
-  clearBtn: { background: 'transparent', border: 'none', color: '#7fa8bd', fontSize: '20px', cursor: 'pointer', padding: '4px 8px', minWidth: '44px', minHeight: '44px' },
+  searchBoxActive: { border: '1px solid rgba(124,124,240,0.6)', background: 'rgba(10,25,42,0.7)', boxShadow: '0 8px 32px rgba(124,124,240,0.15), inset 0 1px 0 rgba(255,255,255,0.05)' },
+  clearBtn: { background: 'transparent', border: 'none', color: '#7fa8bd', cursor: 'pointer', padding: '4px 8px', minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   persistRow:   { display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' },
   persistLabel: { fontSize: '13px', color: '#7fa8bd', fontFamily: "'Inter',sans-serif" },
-  persistPill:  { background: 'rgba(76,201,240,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(76,201,240,0.5)', borderRadius: '20px', padding: '4px 16px', fontSize: '15px', color: '#4CC9F0', fontFamily: "'Inter',sans-serif" },
+  persistPill:  { background: 'rgba(124,124,240,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(124,124,240,0.5)', borderRadius: '20px', padding: '4px 16px', fontSize: '15px', color: '#9B9BF5', fontFamily: "'Inter',sans-serif" },
   persistClear: { background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '20px', padding: '4px 12px', fontSize: '13px', color: '#7fa8bd', cursor: 'pointer', fontFamily: "'Inter',sans-serif" },
 
   dropdown: {
@@ -519,15 +582,15 @@ const styles = {
     boxShadow: '0 16px 48px rgba(0,0,0,0.4)',
   },
   dropSection: { marginBottom: '0.75rem' },
-  dropLabel: { fontSize: '13px', color: '#7fa8bd', marginBottom: '8px', letterSpacing: '1px', textTransform: 'uppercase', fontFamily: "'Inter',sans-serif", fontWeight: '600' },
+  dropLabel: { fontSize: '13px', color: '#7fa8bd', marginBottom: '8px', letterSpacing: '1px', textTransform: 'uppercase', fontFamily: "'Inter',sans-serif", fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' },
   chipRow: { display: 'flex', flexWrap: 'wrap', gap: '10px' },
   chip: { background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', padding: '10px 20px', color: '#c8e0eb', fontSize: '17px', cursor: 'pointer', minHeight: '44px', fontFamily: "'Inter',sans-serif" },
-  chipCat:  { background: 'rgba(76,201,240,0.12)', border: '1px solid rgba(76,201,240,0.3)', color: '#4CC9F0' },
-  recoChip: { background: 'rgba(0,212,170,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(0,212,170,0.4)', borderRadius: '24px', padding: '10px 20px', color: '#00D4AA', fontSize: '17px', cursor: 'pointer', minHeight: '44px', fontFamily: "'Inter',sans-serif" },
+  chipCat:  { background: 'rgba(91,141,239,0.12)', border: '1px solid rgba(91,141,239,0.3)', color: '#9B9BF5' },
+  recoChip: { background: 'rgba(124,124,240,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(124,124,240,0.4)', borderRadius: '24px', padding: '10px 20px', color: '#9B9BF5', fontSize: '17px', cursor: 'pointer', minHeight: '44px', fontFamily: "'Inter',sans-serif" },
 
-  cardsSection: { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, paddingTop: '5rem' },
-  cardsLabel: { fontSize: '25px', letterSpacing: '2px', color: '#7fa8bd', textTransform: 'uppercase', fontFamily: "'Inter',sans-serif", fontWeight: '700', marginBottom: '20px', textAlign: 'center' },
-  cardsGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '18px', width: '100%', flex: 1, minHeight: 0, maxHeight: '680px' },
+  cardsSection: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 0, paddingTop: '0.25rem' },
+  cardsLabel: { fontSize: '13px', letterSpacing: '2px', color: '#7fa8bd', textTransform: 'uppercase', fontFamily: "'Inter',sans-serif", fontWeight: '700', marginBottom: '20px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' },
+  cardsGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '18px', width: '100%', flex: 1, minHeight: 0, maxHeight: '480px' },
 
   keyboard: {
     width: '100%',
@@ -547,9 +610,9 @@ const styles = {
     minHeight: '80px',
   },
   keyCaps:        { maxWidth: '106px', color: '#7fa8bd' },
-  keyCapsActive:  { background: 'rgba(76,201,240,0.25)', border: '1px solid rgba(76,201,240,0.5)', color: '#4CC9F0' },
+  keyCapsActive:  { background: 'rgba(124,124,240,0.25)', border: '1px solid rgba(124,124,240,0.5)', color: '#9B9BF5' },
   keyWide:        { maxWidth: '106px' },
   keySpace:       { maxWidth: '340px' },
-  keySearch:      { maxWidth: '150px', background: 'linear-gradient(135deg, #4CC9F0, #00D4AA)', border: 'none', color: '#04141f', fontWeight: '700', backdropFilter: 'none' },
+  keySearch:      { maxWidth: '150px', background: 'linear-gradient(135deg, #5B8DEF, #A78BFA)', border: 'none', color: '#04141f', fontWeight: '700', backdropFilter: 'none' },
   keySearchDisabled: { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: '#5a7a8a', cursor: 'not-allowed' },
 }

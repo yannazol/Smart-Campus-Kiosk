@@ -120,7 +120,7 @@ const STRANDS_COLORS = ["#6f570d","#091dae","#5a0822"]
 
 const INITIAL_MSG = [{ from: 'bot', text: "Hi! 👋 I'm your Campus Navigator Bot. How can I help you today?", time: new Date().toISOString() }]
 
-const FAB_SIZE = 140
+const FAB_SIZE = 96
 const FAB_MARGIN = 16
 
 function getResponse(input) {
@@ -194,13 +194,11 @@ export default function ChatBot() {
     if (!dragState.current.dragging) return
     const dx = clientX - dragState.current.startX
     const dy = clientY - dragState.current.startY
-    // Require a real, deliberate drag: more distance AND not just a touch jitter
     if (Math.abs(dx) > 12 || Math.abs(dy) > 12) dragState.current.moved = true
     setFabPos(clampPos(dragState.current.origX + dx, dragState.current.origY + dy))
   }
   const handleDragEnd = () => {
     const elapsed = Date.now() - (dragState.current.startTime || 0)
-    // A quick press (under 250ms) is always treated as a tap, regardless of tiny jitter
     const wasMoved = dragState.current.moved && elapsed > 50
     dragState.current.dragging = false
     return wasMoved
@@ -317,12 +315,12 @@ export default function ChatBot() {
           to   { opacity:1; transform:translateY(0) scale(1); }
         }
         @keyframes fabPulse {
-          0%,100% { box-shadow:0 0 8px rgba(55,138,221,0.35); }
-          50%     { box-shadow:0 0 14px rgba(55,138,221,0.55); }
+          0%,100% { box-shadow:0 0 8px rgba(91,141,239,0.35); }
+          50%     { box-shadow:0 0 14px rgba(91,141,239,0.55); }
         }
         @keyframes fabPulseOpen {
-          0%,100% { box-shadow:0 0 10px rgba(55,138,221,0.5); }
-          50%     { box-shadow:0 0 18px rgba(55,138,221,0.7); }
+          0%,100% { box-shadow:0 0 10px rgba(91,141,239,0.5); }
+          50%     { box-shadow:0 0 18px rgba(91,141,239,0.7); }
         }
         @keyframes blink {
           0%,100% { opacity:1; }
@@ -453,10 +451,10 @@ export default function ChatBot() {
         <div style={{ width:'100%', height:'100%', borderRadius:'50%', overflow:'hidden', position:'relative', pointerEvents: 'none' }}>
           <Strands
             colors={STRANDS_COLORS}
-            count={5} speed={0.6} amplitude={1.6} waviness={1.3}
-            thickness={1.0} glow={2.2} taper={2} spread={0.9}
-            intensity={0.75} saturation={2} opacity={1} scale={1.4}
-            glass refraction={1.2} dispersion={1.1} glassSize={1} hueShift={0.1}
+            count={4} speed={0.6} amplitude={1.4} waviness={1.2}
+            thickness={1.0} glow={2.0} taper={2} spread={0.8}
+            intensity={0.7} saturation={2} opacity={1} scale={1.1}
+            glass refraction={1.1} dispersion={1.0} glassSize={0.7} hueShift={0.1}
           />
         </div>
       </button>
