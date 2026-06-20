@@ -341,8 +341,7 @@ export default function ChatBot() {
           {/* header ----------------------------- */}
           <div style={s.header}>
             <div style={s.headerRow}>
-              <span style={s.sparkle}>✨</span>
-              <p style={s.botName}>Campus AI</p>
+              <p style={s.botName}>Campus Botbot</p>
             </div>
             <p style={s.botStatus}>● Online · Smart Navigator</p>
           </div>

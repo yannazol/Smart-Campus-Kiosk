@@ -526,7 +526,7 @@ export default function MapPage() {
         {/* ── Side panel — glass ── */}
         <div style={s.panel}>
 
-          {/* 1. Destination */}
+          {/* Destination */}
           <div style={s.sec}>
             <p style={s.secLabel}><Icon.Pin size={12}/> Destination</p>
             {dest ? (
@@ -543,7 +543,7 @@ export default function MapPage() {
             )}
           </div>
 
-          {/* 2. Directions */}
+          {/* Directions */}
           <div style={{ ...s.sec, flex: 1, overflowY: 'auto' }}>
             <p style={s.secLabel}><Icon.List size={12}/> Directions</p>
             {loading ? (
@@ -567,7 +567,7 @@ export default function MapPage() {
             )}
           </div>
 
-          {/* 3. Room Photo */}
+          {/* Room Photo */}
           {dest && (
             <div style={s.sec}>
               <p style={s.secLabel}><Icon.Image size={12}/> What it looks like</p>
@@ -575,15 +575,15 @@ export default function MapPage() {
             </div>
           )}
 
-          {/* 4. QR Code */}
+          {/* QR Code */}
           {dest && (
             <div style={s.sec}>
               <p style={s.secLabel}><Icon.QrCode size={14}/> Scan to save on phone</p>
               <div style={s.qrRow}>
                 <QRCode
-                  value={`${window.location.origin}/directions?to=${dest.id}&name=${encodeURIComponent(dest.name)}&floor=${dest.floor || 1}&building=${dest.building || ''}`}
+                  value={`http://192.168.8.143:5174/directions?to=${dest.id}&name=${encodeURIComponent(dest.name)}&floor=${dest.floor || 1}&building=${dest.building || ''}`}
                   size={140}
-                />
+                  />
                 <p style={s.muted}>Scan to save these directions on your phone.</p>
               </div>
             </div>

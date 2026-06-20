@@ -11,7 +11,7 @@ const ALL_LOCATIONS = [
   'Academic Affairs', 'Theater', 'Computer Laboratory 1',
   'Computer Laboratory 2', "Dean's Office", 'IT Laboratory',
   'Room 301', 'Room 302', 'Room 303', 'Clinic', 'Registrar',
-  'Gymnasium', 'Auditorium', 'Security Office',
+  'Gymnasium', 'Auditorium', 'Security Office', 'TBA', 'B2-21', 'B2-22', 'B2-23', 'B2-24', 
 ]
 const KEYBOARD_ROWS = [
   ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
