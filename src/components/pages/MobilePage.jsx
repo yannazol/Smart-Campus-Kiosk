@@ -380,7 +380,7 @@ export default function MobilePage() {
   return (
     <div style={s.page}>
 
-      {/* Background: gradient + ambient glow */}
+      {/* Background: gradient & ambient glow */}
       <div style={s.ambientWrap}>
         <div style={s.ambient1}/>
         <div style={s.ambient2}/>
